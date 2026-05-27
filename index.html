@@ -2626,17 +2626,16 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
 
   function openAdmin(){
     adminModal.classList.add('open');
-    if(sessionStorage.getItem(ADMIN_S_KEY)==='ok'){
-      showDash();
-    } else {
-      adminLoginWrap.style.display='';
-      adminDashWrap.style.display='none';
-      adminPassInp.value='';
-      adminLoginErr.classList.remove('show');
-      setTimeout(function(){ adminPassInp.focus(); },120);
-    }
+    adminLoginWrap.style.display='';
+    adminDashWrap.style.display='none';
+    adminPassInp.value='';
+    adminLoginErr.classList.remove('show');
+    setTimeout(function(){ adminPassInp.focus(); },120);
   }
-  function closeAdmin(){ adminModal.classList.remove('open'); }
+  function closeAdmin(){
+    adminModal.classList.remove('open');
+    sessionStorage.removeItem(ADMIN_S_KEY);
+  }
 
   if(adminOpenLink) adminOpenLink.addEventListener('click', function(e){ e.preventDefault(); openAdmin(); });
   var adminOpenLinkGate = document.getElementById('adminOpenLinkGate');
