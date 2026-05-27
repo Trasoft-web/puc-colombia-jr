@@ -2519,8 +2519,8 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
   const SB_URL = 'https://gjabnawzvxhanyytthht.supabase.co';
   const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqYWJuYXd6dnhoYW55eXR0aGh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NTQyMzAsImV4cCI6MjA5NTQzMDIzMH0.ksWKl1uIVY_LjOecsOVvXIv5OZFje3wGsVyxtg8bH58';
 
-  /* ── ⚠ CAMBIA ESTA CONTRASEÑA — es la del panel de admin ── */
-  const ADMIN_PASS = 'Jennifer2024Admin';
+  /* ── Contraseña admin (SHA-256, no texto plano) ─────────── */
+  const ADMIN_HASH = '7fd899ec4434899b63009976639d7a926f0d7fcc3751cc9033abdeeff1e56b2a';
   /* ──────────────────────────────────────────────────────── */
 
   const STORAGE_KEY = 'puc_jr_email';
@@ -2646,8 +2646,13 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
   document.addEventListener('keydown', function(e){ if(e.key==='Escape'&&adminModal.classList.contains('open')) closeAdmin(); });
 
   /* ── Login admin ─────────────────────────────────────────── */
-  function doAdminLogin(){
-    if(adminPassInp.value===ADMIN_PASS){
+  async function hashStr(str){
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+  async function doAdminLogin(){
+    const h = await hashStr(adminPassInp.value);
+    if(h===ADMIN_HASH){
       sessionStorage.setItem(ADMIN_S_KEY,'ok');
       adminLoginErr.classList.remove('show');
       showDash();
