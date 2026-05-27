@@ -2837,6 +2837,23 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
 // ═══════════════════════════════════════════════════════════
 (function initAccessControl(){
 
+  /* ══════════════════════════════════════════════════════════
+     🔒 CONTROL DE ACCESO
+     true  → activo   (pide correo al entrar)
+     false → inactivo (entra directo, sin verificación)
+  ══════════════════════════════════════════════════════════ */
+  const ACCESO_ACTIVO = false;
+  /* ──────────────────────────────────────────────────────── */
+
+  if(!ACCESO_ACTIVO){
+    // Acceso libre — ocultar gate y mostrar app directamente
+    document.getElementById('accessGate').style.display = 'none';
+    document.querySelector('.app').style.display = '';
+    const fab = document.getElementById('fabAsiento');
+    if(fab) fab.style.display = '';
+    // Igual iniciamos el panel admin por si Jennifer lo necesita
+  }
+
   /* ── Supabase ─────────────────────────────────────────────
      Tabla: accesos (email text unique, nombre text, activo bool)
   ──────────────────────────────────────────────────────────── */
