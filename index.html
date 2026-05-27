@@ -979,6 +979,9 @@ mark{
       </button>
       <div class="gate-error" id="gateError"></div>
       <p class="gate-note">¿Aún no tienes acceso? Escríbele a <a href="mailto:jennifer@tudominio.com">Jennifer Roman</a>.</p>
+      <p style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
+        <a href="#" class="admin-link" id="adminOpenLinkGate" style="font-size:12px;opacity:.5;">⚙ Administración</a>
+      </p>
     </div>
 
     <!-- Estado: sin token -->
@@ -2602,6 +2605,8 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
   function closeAdmin(){ adminModal.classList.remove('open'); }
 
   if(adminOpenLink) adminOpenLink.addEventListener('click', function(e){ e.preventDefault(); openAdmin(); });
+  var adminOpenLinkGate = document.getElementById('adminOpenLinkGate');
+  if(adminOpenLinkGate) adminOpenLinkGate.addEventListener('click', function(e){ e.preventDefault(); openAdmin(); });
   adminCloseBtn.addEventListener('click', closeAdmin);
   adminModal.addEventListener('click', function(e){ if(e.target===adminModal) closeAdmin(); });
   document.addEventListener('keydown', function(e){ if(e.key==='Escape'&&adminModal.classList.contains('open')) closeAdmin(); });
