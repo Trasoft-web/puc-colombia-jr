@@ -1084,14 +1084,14 @@ mark{
       Uso educativo y de referencia. © 2025
     </div>
     <div class="footer-contact">
-      <a href="https://wa.me/573145739340" target="_blank" rel="noopener" class="footer-contact-link">
+      <span class="footer-contact-link">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.999 0C5.373 0 0 5.373 0 12c0 2.117.554 4.106 1.523 5.832L.057 23.999l6.305-1.654A11.954 11.954 0 0 0 12 24c6.627 0 12-5.373 12-12S18.626 0 11.999 0zm.001 21.818a9.816 9.816 0 0 1-5.001-1.368l-.359-.214-3.722.976.994-3.633-.234-.373A9.818 9.818 0 0 1 2.182 12c0-5.42 4.399-9.818 9.818-9.818 5.42 0 9.819 4.398 9.819 9.818 0 5.419-4.399 9.818-9.819 9.818z"/></svg>
         3145739340
-      </a>
-      <a href="https://instagram.com/cpjenniferroman" target="_blank" rel="noopener" class="footer-contact-link">
+      </span>
+      <span class="footer-contact-link">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
         @cpjenniferroman
-      </a>
+      </span>
       <a href="#" class="admin-link" id="adminOpenLink">⚙ Administración</a>
     </div>
   </footer>
@@ -2538,6 +2538,216 @@ const SC = {
       ],
       note:'Este asiento cierra la orden de producción. El costo incluye MP + MOD + CIF. Al vender: DB 7135 (CMV producción) / CR 1460.'
     })
+  },
+
+  /* ── CLASE 3 — PATRIMONIO (adicionales) ─────────────────── */
+  revalorizacion:{
+    info:'Ajuste por revalorización del patrimonio en épocas de inflación, reconocido en la cuenta 341 según normas contables colombianas.',
+    fields:[{id:'base',lbl:'Valor del ajuste por inflación ($)',ph:'5.000.000'}],
+    gen:f=>({
+      lines:[
+        {code:'380505',name:'Revalorización del patrimonio',     db:0,cr:f.base},
+        {code:'472005',name:'Corrección monetaria — ingresos',   db:f.base,cr:0},
+      ],
+      note:'Bajo NIIF (IFRS) este ajuste aplica solo en hiperinflación. Bajo PCGA colombiano se registra en 3815 contra la cuenta de corrección monetaria del P&G.'
+    })
+  },
+
+  prima_colocacion:{
+    info:'Prima en colocación de acciones: excedente pagado por los accionistas sobre el valor nominal de las acciones.',
+    fields:[
+      {id:'valor_nominal', lbl:'Valor nominal de las acciones ($)', ph:'10.000.000'},
+      {id:'valor_pagado',  lbl:'Valor pagado por los accionistas ($)', ph:'15.000.000'}
+    ],
+    gen:f=>{
+      const prima = f.valor_pagado - f.valor_nominal;
+      return {
+        lines:[
+          {code:'1110',  name:'Bancos — moneda nacional',           db:f.valor_pagado, cr:0},
+          {code:'310505',name:'Capital suscrito y pagado',           db:0, cr:f.valor_nominal},
+          {code:'320505',name:'Prima en colocación de acciones',     db:0, cr:prima},
+        ],
+        note:'Prima en colocación: '+COP(prima)+'. La prima hace parte del superávit de capital y no es distribuible como dividendo hasta que se capitalice.'
+      };
+    }
+  },
+
+  resultado_ejercicio:{
+    info:'Asiento de cierre del ejercicio: traslado de la utilidad neta a la cuenta de utilidades del ejercicio (Clase 3).',
+    fields:[{id:'utilidad',lbl:'Utilidad neta del período ($)',ph:'25.000.000'}],
+    gen:f=>({
+      lines:[
+        {code:'590505',name:'Utilidad del ejercicio — cierre',   db:f.utilidad, cr:0},
+        {code:'360505',name:'Utilidades del ejercicio',          db:0, cr:f.utilidad},
+      ],
+      note:'El asiento de cierre se hace el 31 de diciembre. Después de la asamblea se decide cuánto va a dividendos, a reservas y cuánto queda como utilidades retenidas (370505).'
+    })
+  },
+
+  perdida_ejercicio:{
+    info:'Absorción de pérdida del ejercicio con cargo a reservas o utilidades acumuladas de períodos anteriores.',
+    fields:[{id:'perdida',lbl:'Pérdida del período ($)',ph:'8.000.000'}],
+    gen:f=>({
+      lines:[
+        {code:'370505',name:'Utilidades acumuladas de períodos anteriores', db:f.perdida, cr:0},
+        {code:'360510',name:'Pérdida del ejercicio',                         db:0, cr:f.perdida},
+      ],
+      note:'Si no hay utilidades acumuladas suficientes, la pérdida queda en 360510 y reduce el patrimonio. Los socios pueden aportar capital adicional para absorberla.'
+    })
+  },
+
+  /* ── CLASE 6 — COSTOS DE VENTA (adicionales) ─────────────── */
+  compra_inventario:{
+    info:'Registro de compra de mercancía al costo, sin IVA descontable, para empresa no responsable del impuesto.',
+    fields:[
+      {id:'base', lbl:'Valor de la compra ($)', ph:'8.000.000'},
+      {id:'pago', lbl:'Forma de pago', type:'select', opts:[{v:'contado',l:'Contado (banco)'},{v:'credito',l:'Crédito (proveedor)'}]}
+    ],
+    gen:f=>{
+      const contra = f.pago==='contado'
+        ? {code:'1110',name:'Bancos — moneda nacional'}
+        : {code:'220505',name:'Proveedores — cuentas por pagar'};
+      return {
+        lines:[
+          {code:'6135',  name:'Costo de mercancías vendidas',               db:f.base, cr:0},
+          {code:contra.code, name:contra.name,                              db:0, cr:f.base},
+        ],
+        note:'Método de inventario periódico: el costo va directo a 6135. En inventario permanente (Kardex): DB 1435 / CR '+contra.code+', y el 6135 se registra al vender.'
+      };
+    }
+  },
+
+  flete_compras:{
+    info:'Registro del flete o transporte en la compra de mercancía. Hace parte del costo del inventario adquirido.',
+    fields:[{id:'flete',lbl:'Valor del flete ($)',ph:'350.000'}],
+    gen:f=>({
+      lines:[
+        {code:'1435',  name:'Mercancías no fabricadas por la empresa',  db:f.flete, cr:0},
+        {code:'1110',  name:'Bancos — moneda nacional',                  db:0, cr:f.flete},
+      ],
+      note:'El flete en compras aumenta el costo del inventario (NIC 2 / Sección 13 NIIF para PYMES). Si se paga con retención: DB 1435 / CR 1110 neto + CR 236540 (Rte Fte).'
+    })
+  },
+
+  ajuste_costo:{
+    info:'Ajuste de costo por diferencia entre el costo registrado y el costo real del inventario vendido.',
+    fields:[
+      {id:'diferencia', lbl:'Diferencia de costo ($)', ph:'200.000'},
+      {id:'tipo', lbl:'Tipo de diferencia', type:'select', opts:[{v:'mayor',l:'Costo real mayor (ajuste al alza)'},{v:'menor',l:'Costo real menor (ajuste a la baja)'}]}
+    ],
+    gen:f=>{
+      const mayor = f.tipo==='mayor';
+      return {
+        lines: mayor
+          ? [{code:'6135',name:'Costo de mercancías vendidas',db:f.diferencia,cr:0},{code:'1435',name:'Mercancías no fabricadas por la empresa',db:0,cr:f.diferencia}]
+          : [{code:'1435',name:'Mercancías no fabricadas por la empresa',db:f.diferencia,cr:0},{code:'6135',name:'Costo de mercancías vendidas',db:0,cr:f.diferencia}],
+        note: mayor
+          ? 'El costo real es mayor al registrado. Se ajusta aumentando el costo de ventas y reduciendo el inventario.'
+          : 'El costo real es menor al registrado. Se ajusta reduciendo el costo de ventas y aumentando el inventario.'
+      };
+    }
+  },
+
+  baja_inventario:{
+    info:'Baja de inventario por obsolescencia, vencimiento o daño irreparable. El valor se lleva a gasto.',
+    fields:[{id:'base',lbl:'Valor en libros del inventario dado de baja ($)',ph:'1.200.000'}],
+    gen:f=>({
+      lines:[
+        {code:'519995',name:'Otros gastos — pérdida por baja de inventario', db:f.base, cr:0},
+        {code:'1435',  name:'Mercancías no fabricadas por la empresa',        db:0, cr:f.base},
+      ],
+      note:'Documenta la baja con acta firmada y soporte fotográfico. Si existe provisión de inventario (1499), primero úsala: DB 1499 / CR 1435. El gasto puede ser deducible si cumple los requisitos del E.T.'
+    })
+  },
+
+  /* ── CLASE 7 — COSTO DE PRODUCCIÓN (adicionales) ─────────── */
+  cif_reales:{
+    info:'Registro de los CIF reales incurridos en el período: arriendo fábrica, servicios públicos fábrica, depreciación maquinaria, etc.',
+    fields:[
+      {id:'arriendo', lbl:'Arriendo fábrica ($)',            ph:'2.000.000'},
+      {id:'serv',     lbl:'Servicios públicos fábrica ($)',  ph:'800.000'},
+      {id:'depr',     lbl:'Depreciación maquinaria ($)',     ph:'500.000'}
+    ],
+    gen:f=>{
+      const total = f.arriendo + f.serv + f.depr;
+      return {
+        lines:[
+          {code:'731005',name:'CIF reales — arrendamiento',       db:f.arriendo, cr:0},
+          {code:'731010',name:'CIF reales — servicios públicos',   db:f.serv,     cr:0},
+          {code:'731515',name:'CIF reales — depreciación',         db:f.depr,     cr:0},
+          {code:'1110',  name:'Bancos / Cuentas por pagar',        db:0, cr:f.arriendo+f.serv},
+          {code:'159205',name:'Depreciación acumulada',            db:0, cr:f.depr},
+        ],
+        note:'Total CIF reales: '+COP(total)+'. Al comparar con CIF aplicados se obtiene la variación del período (sub o sobreaplicación).'
+      };
+    }
+  },
+
+  variacion_cif:{
+    info:'Cierre de la cuenta de CIF: comparación entre CIF aplicados y CIF reales. La diferencia es la variación (sub/sobreaplicación).',
+    fields:[
+      {id:'aplicados', lbl:'CIF aplicados en el período ($)',  ph:'9.000.000'},
+      {id:'reales',    lbl:'CIF reales del período ($)',       ph:'9.800.000'}
+    ],
+    gen:f=>{
+      const diff = f.reales - f.aplicados;
+      const sub = diff > 0;
+      return {
+        lines: sub
+          ? [
+              {code:'6135',  name:'Costo de ventas (ajuste variación)',  db:diff,         cr:0},
+              {code:'731505',name:'CIF aplicados',                        db:f.aplicados,  cr:0},
+              {code:'731005',name:'CIF reales',                           db:0, cr:f.reales},
+            ]
+          : [
+              {code:'731505',name:'CIF aplicados',                        db:f.aplicados,  cr:0},
+              {code:'731005',name:'CIF reales',                           db:0, cr:f.reales},
+              {code:'4295',  name:'Ingreso por sobreaplicación CIF',      db:0, cr:Math.abs(diff)},
+            ],
+        note:(sub
+          ? 'Subaplicación: '+COP(diff)+' — se lleva a mayor costo de ventas.'
+          : 'Sobreaplicación: '+COP(Math.abs(diff))+' — se registra como ingreso o reduce el costo de ventas.')
+          +' Este ajuste se hace al cierre del período contable.'
+      };
+    }
+  },
+
+  moi:{
+    info:'Mano de obra indirecta (MOI): supervisores, vigilantes de planta, personal de mantenimiento. Forma parte de los CIF.',
+    fields:[
+      {id:'salario', lbl:'Salario bruto MOI ($)',          ph:'2.500.000'},
+      {id:'ss',      lbl:'Seguridad social empleador ($)', ph:'290.000'}
+    ],
+    gen:f=>({
+      lines:[
+        {code:'730505',name:'CIF — mano de obra indirecta',    db:f.salario, cr:0},
+        {code:'730510',name:'CIF — seguridad social MOI',      db:f.ss,      cr:0},
+        {code:'250505',name:'Nómina por pagar',                db:0, cr:f.salario},
+        {code:'250605',name:'Seguridad social por pagar',      db:0, cr:f.ss},
+      ],
+      note:'A diferencia de la MOD, la MOI no se puede asociar directamente a una unidad producida. Se acumula en CIF y se distribuye mediante la tasa predeterminada.'
+    })
+  },
+
+  pp_en_proceso:{
+    info:'Cierre del período: inventario de productos en proceso que queda sin terminar al corte contable.',
+    fields:[
+      {id:'mp',  lbl:'MP acumulada en proceso ($)',   ph:'3.000.000'},
+      {id:'mod', lbl:'MOD acumulada en proceso ($)',  ph:'1.500.000'},
+      {id:'cif', lbl:'CIF aplicados en proceso ($)',  ph:'900.000'}
+    ],
+    gen:f=>{
+      const total = f.mp + f.mod + f.cif;
+      return {
+        lines:[
+          {code:'1465',  name:'Productos en proceso — inventario final',   db:total,  cr:0},
+          {code:'710505',name:'Materia prima en proceso',                   db:0, cr:f.mp},
+          {code:'720505',name:'Mano de obra directa en proceso',            db:0, cr:f.mod},
+          {code:'730505',name:'CIF en proceso',                             db:0, cr:f.cif},
+        ],
+        note:'Total en proceso: '+COP(total)+'. Este inventario (1465) abre el siguiente período y se continúa procesando. Es obligatorio reportarlo en el balance de cierre.'
+      };
+    }
   }
 
 }; // fin SC
@@ -2686,6 +2896,10 @@ const SCENARIOS_LIST = [
     {v:'reserva_legal',         l:'Apropiación de reserva legal (10%)'},
     {v:'capitalizacion',        l:'Capitalización de utilidades acumuladas'},
     {v:'dividendos',            l:'Distribución de dividendos'},
+    {v:'revalorizacion',        l:'Revalorización del patrimonio'},
+    {v:'prima_colocacion',      l:'Prima en colocación de acciones'},
+    {v:'resultado_ejercicio',   l:'Cierre del ejercicio (resultado a utilidades)'},
+    {v:'perdida_ejercicio',     l:'Absorción de pérdida del ejercicio'},
   ]},
   { grp:'4️⃣ Clase 4 — Ingresos', items:[
     {v:'venta_contado',         l:'Venta de contado, sin IVA'},
@@ -2712,12 +2926,20 @@ const SCENARIOS_LIST = [
     {v:'cmv',                   l:'Costo de mercancía vendida (CMV)'},
     {v:'devolucion_compras',    l:'Devolución de mercancía al proveedor'},
     {v:'descuento_compras',     l:'Descuento en compras'},
+    {v:'compra_inventario',     l:'Compra de inventario al costo'},
+    {v:'flete_compras',         l:'Flete en compras (mayor costo inventario)'},
+    {v:'ajuste_costo',          l:'Ajuste de costo por diferencia de inventario'},
+    {v:'baja_inventario',       l:'Baja de inventario por obsolescencia'},
   ]},
   { grp:'7️⃣ Clase 7 — Costo de Producción', items:[
     {v:'mp_consumida',          l:'Consumo de materia prima'},
     {v:'mano_obra_directa',     l:'Mano de obra directa (MOD)'},
     {v:'cif_aplicados',         l:'CIF aplicados a la orden'},
     {v:'producto_terminado',    l:'Traslado a productos terminados'},
+    {v:'cif_reales',            l:'Registro de CIF reales del período'},
+    {v:'variacion_cif',         l:'Variación de CIF (sobre/sub aplicados)'},
+    {v:'moi',                   l:'Mano de obra indirecta (MOI)'},
+    {v:'pp_en_proceso',         l:'Productos en proceso al cierre del período'},
   ]},
 ];
 
