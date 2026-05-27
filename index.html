@@ -1154,6 +1154,40 @@ mark{
   </div><!-- /panel -->
 </div><!-- /overlay -->
 
+<!-- ── Panel de Administración ─────────────────────────────── -->
+<div id="adminModal">
+  <div class="admin-card">
+    <button class="admin-close" id="adminCloseBtn" title="Cerrar">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div id="adminLoginWrap">
+      <p class="admin-h2">🔒 Panel de Administración</p>
+      <p class="admin-sub">Ingresa la contraseña de Jennifer para gestionar los correos autorizados.</p>
+      <input class="gate-input" type="password" id="adminPassInp"
+        placeholder="Contraseña" style="text-align:left;margin-bottom:12px;">
+      <button class="gate-btn" id="adminLoginBtn">Entrar al panel</button>
+      <div class="gate-error" id="adminLoginErr"></div>
+    </div>
+    <div id="adminDashWrap" style="display:none;">
+      <p class="admin-h2">👥 Gestión de Accesos</p>
+      <p class="admin-sub" id="adminTotalTxt">Cargando lista…</p>
+      <div class="admin-row">
+        <input class="gate-input" type="email" id="adminNewEmail"
+          placeholder="correo@cliente.com" style="text-align:left;margin:0;" autocomplete="off">
+        <input class="gate-input n-inp" type="text" id="adminNewNombre"
+          placeholder="Nombre (opcional)" style="text-align:left;margin:0;">
+        <button class="admin-add" id="adminAddBtn">+ Agregar</button>
+      </div>
+      <div class="gate-error" id="adminAddErr" style="margin-bottom:14px;"></div>
+      <div id="adminTableWrap"><div class="a-loading">Cargando…</div></div>
+      <p style="font-size:11px;color:var(--text-muted);margin-top:18px;text-align:center;line-height:1.6;">
+        Los cambios son <strong>inmediatos</strong> — sin redesplegar.<br>
+        El cliente activo puede ingresar en cualquier momento.
+      </p>
+    </div>
+  </div>
+</div>
+
 <script>
 // ═══════════════════════════════════════════════════════════
 //  PUC COLOMBIA — Base de datos
@@ -2718,50 +2752,6 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
 })();
 </script>
 
-<!-- ── Panel de Administración ─────────────────────────────── -->
-<div id="adminModal">
-  <div class="admin-card">
-    <button class="admin-close" id="adminCloseBtn" title="Cerrar">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>
-
-    <!-- Pantalla: login -->
-    <div id="adminLoginWrap">
-      <p class="admin-h2">🔒 Panel de Administración</p>
-      <p class="admin-sub">Ingresa la contraseña de Jennifer para gestionar los correos autorizados.</p>
-      <input class="gate-input" type="password" id="adminPassInp"
-        placeholder="Contraseña" style="text-align:left;margin-bottom:12px;">
-      <button class="gate-btn" id="adminLoginBtn">Entrar al panel</button>
-      <div class="gate-error" id="adminLoginErr"></div>
-    </div>
-
-    <!-- Pantalla: gestión de clientes -->
-    <div id="adminDashWrap" style="display:none;">
-      <p class="admin-h2">👥 Gestión de Accesos</p>
-      <p class="admin-sub" id="adminTotalTxt">Cargando lista…</p>
-
-      <!-- Agregar nuevo cliente -->
-      <div class="admin-row">
-        <input class="gate-input" type="email" id="adminNewEmail"
-          placeholder="correo@cliente.com" style="text-align:left;margin:0;" autocomplete="off">
-        <input class="gate-input n-inp" type="text" id="adminNewNombre"
-          placeholder="Nombre (opcional)" style="text-align:left;margin:0;">
-        <button class="admin-add" id="adminAddBtn">+ Agregar</button>
-      </div>
-      <div class="gate-error" id="adminAddErr" style="margin-bottom:14px;"></div>
-
-      <!-- Tabla de clientes -->
-      <div id="adminTableWrap">
-        <div class="a-loading">Cargando…</div>
-      </div>
-
-      <p style="font-size:11px;color:var(--text-muted);margin-top:18px;text-align:center;line-height:1.6;">
-        Los cambios son <strong>inmediatos</strong> — sin redesplegar.<br>
-        El cliente activo puede ingresar en cualquier momento.
-      </p>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>
