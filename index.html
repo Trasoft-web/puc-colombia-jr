@@ -885,6 +885,77 @@ mark{
   .gate-card{padding:30px 22px;}
   .gate-card h2{font-size:19px;}
 }
+
+/* ─── ADMIN PANEL ─────────────────────────────────────────── */
+#adminModal{
+  position:fixed;inset:0;z-index:10000;
+  background:rgba(14,24,41,0.55);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  display:none;align-items:center;justify-content:center;
+  padding:20px;
+}
+#adminModal.open{display:flex;}
+.admin-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:36px 32px 28px;
+  max-width:620px;width:100%;
+  box-shadow:var(--shadow-lg);
+  animation:fadeUp .3s ease both;
+  position:relative;
+  max-height:90vh;overflow-y:auto;
+}
+.admin-close{
+  position:absolute;top:14px;right:14px;
+  background:var(--surface-2);border:1px solid var(--border);
+  width:30px;height:30px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--text-muted);
+  transition:all var(--transition);
+}
+.admin-close:hover{background:var(--border-2);color:var(--text);}
+.admin-h2{font-family:var(--font-d);font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.admin-sub{font-size:13px;color:var(--text-muted);margin-bottom:22px;line-height:1.55;}
+.admin-row{display:flex;gap:8px;margin-bottom:14px;align-items:flex-start;flex-wrap:wrap;}
+.admin-row .gate-input{flex:1;min-width:140px;margin:0;text-align:left;}
+.admin-row .gate-input.n-inp{max-width:160px;flex-shrink:0;}
+.admin-add{
+  padding:12px 16px;
+  background:linear-gradient(135deg,var(--brand) 0%,#3572E8 100%);
+  border:none;border-radius:var(--radius-sm);
+  color:#fff;font-family:var(--font-b);font-size:13px;font-weight:600;
+  cursor:pointer;white-space:nowrap;flex-shrink:0;
+  transition:all var(--transition);
+}
+.admin-add:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(26,86,219,.3);}
+.admin-add:disabled{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none;}
+.admin-table{width:100%;border-collapse:collapse;font-size:13px;}
+.admin-table th{
+  text-align:left;padding:7px 8px;
+  border-bottom:2px solid var(--border-2);
+  color:var(--text-muted);font-weight:600;font-size:11px;
+  text-transform:uppercase;letter-spacing:.5px;
+}
+.admin-table td{padding:9px 8px;border-bottom:1px solid var(--border);color:var(--text-dim);vertical-align:middle;}
+.admin-table tr:last-child td{border-bottom:none;}
+.admin-table tr:hover td{background:var(--surface-2);}
+.abadge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:100px;font-size:11px;font-weight:600;}
+.abadge.on{background:rgba(21,128,61,.10);color:var(--ingreso);}
+.abadge.off{background:rgba(185,28,28,.10);color:var(--pasivo);}
+.a-act-btns{display:flex;gap:5px;}
+.a-act-btn{
+  padding:3px 9px;border-radius:5px;font-size:11px;font-weight:500;
+  border:1px solid var(--border);background:var(--surface-2);
+  cursor:pointer;color:var(--text-muted);
+  transition:all var(--transition);
+}
+.a-act-btn:hover{border-color:var(--border-2);color:var(--text);}
+.a-act-btn.del:hover{border-color:var(--pasivo);color:var(--pasivo);background:rgba(185,28,28,.06);}
+.a-empty,.a-loading{text-align:center;padding:28px;color:var(--text-muted);font-size:13px;}
+.admin-link{font-size:11px;color:var(--text-muted);text-decoration:none;opacity:.4;transition:opacity .2s;}
+.admin-link:hover{opacity:.85;text-decoration:underline;}
+@media(max-width:480px){.admin-card{padding:24px 18px 20px;}.admin-row .gate-input.n-inp{max-width:100%;}}
 </style>
 </head>
 <body>
@@ -997,6 +1068,8 @@ mark{
     <div class="footer-legal">
       Basado en el Decreto 2650 de 1993 y sus modificaciones.<br>
       Uso educativo y de referencia. © 2025
+      <br><br>
+      <a href="#" class="admin-link" id="adminOpenLink">⚙ Administración</a>
     </div>
   </footer>
 
@@ -2398,79 +2471,292 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
 
 
 // ═══════════════════════════════════════════════════════════
-//  ACCESS CONTROL — Jennifer Roman PUC Colombia
-//  Sistema: el cliente ingresa su correo → Jennifer lo autoriza
+//  ACCESS CONTROL + ADMIN PANEL — Jennifer Roman PUC Colombia
+//  Almacenamiento: Supabase (gestión dinámica desde la página)
 // ═══════════════════════════════════════════════════════════
 (function initAccessControl(){
 
-  // ══════════════════════════════════════════════════════════
-  //  📧 CORREOS AUTORIZADOS — agrega uno por cada venta
-  //  Ejemplo:  'cliente@gmail.com',
-  // ══════════════════════════════════════════════════════════
-  const CORREOS_AUTORIZADOS = [
-    'demo@jenniferroman.com',   // ← correo de prueba (puedes borrarlo)
-  ];
-  // ══════════════════════════════════════════════════════════
+  /* ── Supabase ─────────────────────────────────────────────
+     Tabla: accesos (email text unique, nombre text, activo bool)
+  ──────────────────────────────────────────────────────────── */
+  const SB_URL = 'https://gjabnawzvxhanyytthht.supabase.co';
+  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqYWJuYXd6dnhoYW55eXR0aGh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NTQyMzAsImV4cCI6MjA5NTQzMDIzMH0.ksWKl1uIVY_LjOecsOVvXIv5OZFje3wGsVyxtg8bH58';
+
+  /* ── ⚠ CAMBIA ESTA CONTRASEÑA — es la del panel de admin ── */
+  const ADMIN_PASS = 'Jennifer2024Admin';
+  /* ──────────────────────────────────────────────────────── */
 
   const STORAGE_KEY = 'puc_jr_email';
+  const ADMIN_S_KEY = 'puc_jr_adm';
+
+  /* ── Helpers REST ────────────────────────────────────────── */
+  function sbH(extra){
+    return Object.assign({'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},extra||{});
+  }
+  async function sbGet(p){
+    const r=await fetch(SB_URL+p,{headers:sbH()}); return r.json();
+  }
+  async function sbPost(p,b){
+    const r=await fetch(SB_URL+p,{method:'POST',headers:sbH(),body:JSON.stringify(b)}); return r.json();
+  }
+  async function sbPatch(p,b){
+    const r=await fetch(SB_URL+p,{method:'PATCH',headers:sbH(),body:JSON.stringify(b)}); return r.json();
+  }
+  async function sbDelete(p){
+    const r=await fetch(SB_URL+p,{method:'DELETE',headers:sbH()}); return r.status;
+  }
+
+  /* ── DOM refs ─────────────────────────────────────────────  */
   const gate  = document.getElementById('accessGate');
   const appEl = document.querySelector('.app');
   const fab   = document.getElementById('fabAsiento');
+  const topLogo = document.querySelector('.jr-logo img');
+  if(topLogo) document.getElementById('gateLogoImg').src = topLogo.src;
 
-  // Reusar logo del topbar
-  const topbarLogo = document.querySelector('.jr-logo img');
-  if(topbarLogo) document.getElementById('gateLogoImg').src = topbarLogo.src;
-
-  // ── ¿Ya tiene acceso guardado? ────────────────────────────
-  const savedEmail = localStorage.getItem(STORAGE_KEY);
-  if(savedEmail && CORREOS_AUTORIZADOS.includes(savedEmail)){
-    unlockPage(); return;
-  } else if(savedEmail){
-    localStorage.removeItem(STORAGE_KEY);
+  function unlockPage(){ gate.style.display='none'; appEl.style.display=''; if(fab)fab.style.display=''; }
+  function lockPage(){
+    gate.style.display='flex'; appEl.style.display='none'; if(fab)fab.style.display='none';
+    document.getElementById('gateFormWrap').style.display='block';
+    document.getElementById('gateDeniedWrap').style.display='none';
   }
 
-  // ── Mostrar la pantalla de acceso ─────────────────────────
-  appEl.style.display = 'none';
-  fab.style.display   = 'none';
-  gate.style.display  = 'flex';
-  document.getElementById('gateFormWrap').style.display   = 'block';
-  document.getElementById('gateDeniedWrap').style.display = 'none';
-
-  function unlockPage(){
-    gate.style.display  = 'none';
-    appEl.style.display = '';
-    fab.style.display   = '';
+  /* ── Verificar sesión guardada ───────────────────────────── */
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if(saved){
+    unlockPage(); // mostrar de inmediato, validar en segundo plano
+    sbGet('/rest/v1/accesos?email=eq.'+encodeURIComponent(saved)+'&activo=eq.true&select=email')
+      .then(function(d){
+        if(!Array.isArray(d)||d.length===0){
+          localStorage.removeItem(STORAGE_KEY); lockPage();
+        }
+      }).catch(function(){});
+  } else {
+    appEl.style.display='none'; if(fab)fab.style.display='none';
+    gate.style.display='flex';
+    document.getElementById('gateFormWrap').style.display='block';
+    document.getElementById('gateDeniedWrap').style.display='none';
   }
 
-  // ── Verificar correo ──────────────────────────────────────
+  /* ── Verificar correo al ingresar ────────────────────────── */
   const submitBtn = document.getElementById('gateSubmitBtn');
   const errorEl   = document.getElementById('gateError');
   const emailInp  = document.getElementById('gateEmail');
 
-  function doVerify(){
+  async function doVerify(){
     const email = emailInp.value.trim().toLowerCase();
     errorEl.classList.remove('show');
-
-    if(!email || !email.includes('@') || !email.includes('.')){
-      errorEl.textContent = 'Ingresa un correo electrónico válido.';
-      errorEl.classList.add('show');
-      emailInp.focus(); return;
+    if(!email||!email.includes('@')||!email.includes('.')){
+      errorEl.textContent='Ingresa un correo electrónico válido.';
+      errorEl.classList.add('show'); emailInp.focus(); return;
     }
-
-    if(CORREOS_AUTORIZADOS.includes(email)){
-      localStorage.setItem(STORAGE_KEY, email);
-      unlockPage();
-    } else {
-      errorEl.innerHTML = 'Este correo no tiene acceso autorizado.<br><small>Verifica que sea el mismo correo que diste a Jennifer al comprar.</small>';
+    submitBtn.disabled=true;
+    submitBtn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>&nbsp;Verificando…';
+    try {
+      const d = await sbGet('/rest/v1/accesos?email=eq.'+encodeURIComponent(email)+'&activo=eq.true&select=email');
+      if(Array.isArray(d)&&d.length>0){
+        localStorage.setItem(STORAGE_KEY,email); unlockPage();
+      } else {
+        errorEl.innerHTML='Este correo no tiene acceso autorizado.<br><small>Verifica que sea el mismo correo que le diste a Jennifer al comprar.</small>';
+        errorEl.classList.add('show'); emailInp.select();
+      }
+    } catch(e){
+      errorEl.textContent='Error de conexión. Revisa tu internet e intenta de nuevo.';
       errorEl.classList.add('show');
-      emailInp.select();
     }
+    submitBtn.disabled=false;
+    submitBtn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>&nbsp;Ingresar';
   }
-
   submitBtn.addEventListener('click', doVerify);
   emailInp.addEventListener('keydown', function(e){ if(e.key==='Enter') doVerify(); });
 
+  /* ══════════════════════════════════════════════════════════
+     PANEL DE ADMINISTRACIÓN
+  ══════════════════════════════════════════════════════════ */
+  const adminModal    = document.getElementById('adminModal');
+  const adminCloseBtn = document.getElementById('adminCloseBtn');
+  const adminLoginWrap= document.getElementById('adminLoginWrap');
+  const adminDashWrap = document.getElementById('adminDashWrap');
+  const adminPassInp  = document.getElementById('adminPassInp');
+  const adminLoginBtn = document.getElementById('adminLoginBtn');
+  const adminLoginErr = document.getElementById('adminLoginErr');
+  const adminTotalTxt = document.getElementById('adminTotalTxt');
+  const adminTableWrap= document.getElementById('adminTableWrap');
+  const adminNewEmail = document.getElementById('adminNewEmail');
+  const adminNewNombre= document.getElementById('adminNewNombre');
+  const adminAddBtn   = document.getElementById('adminAddBtn');
+  const adminAddErr   = document.getElementById('adminAddErr');
+  const adminOpenLink = document.getElementById('adminOpenLink');
+
+  function openAdmin(){
+    adminModal.classList.add('open');
+    if(sessionStorage.getItem(ADMIN_S_KEY)==='ok'){
+      showDash();
+    } else {
+      adminLoginWrap.style.display='';
+      adminDashWrap.style.display='none';
+      adminPassInp.value='';
+      adminLoginErr.classList.remove('show');
+      setTimeout(function(){ adminPassInp.focus(); },120);
+    }
+  }
+  function closeAdmin(){ adminModal.classList.remove('open'); }
+
+  if(adminOpenLink) adminOpenLink.addEventListener('click', function(e){ e.preventDefault(); openAdmin(); });
+  adminCloseBtn.addEventListener('click', closeAdmin);
+  adminModal.addEventListener('click', function(e){ if(e.target===adminModal) closeAdmin(); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape'&&adminModal.classList.contains('open')) closeAdmin(); });
+
+  /* ── Login admin ─────────────────────────────────────────── */
+  function doAdminLogin(){
+    if(adminPassInp.value===ADMIN_PASS){
+      sessionStorage.setItem(ADMIN_S_KEY,'ok');
+      adminLoginErr.classList.remove('show');
+      showDash();
+    } else {
+      adminLoginErr.textContent='Contraseña incorrecta.';
+      adminLoginErr.classList.add('show');
+      adminPassInp.select();
+    }
+  }
+  adminLoginBtn.addEventListener('click', doAdminLogin);
+  adminPassInp.addEventListener('keydown', function(e){ if(e.key==='Enter') doAdminLogin(); });
+
+  /* ── Dashboard ───────────────────────────────────────────── */
+  async function showDash(){
+    adminLoginWrap.style.display='none';
+    adminDashWrap.style.display='';
+    await loadAccesos();
+  }
+
+  async function loadAccesos(){
+    adminTableWrap.innerHTML='<div class="a-loading">Cargando lista…</div>';
+    try {
+      const data = await sbGet('/rest/v1/accesos?select=id,email,nombre,activo,creado_en&order=creado_en.desc');
+      const rows = Array.isArray(data)?data:[];
+      const total   = rows.length;
+      const activos = rows.filter(function(x){ return x.activo; }).length;
+      adminTotalTxt.textContent=total+' cliente'+(total!==1?'s':'')+' registrado'+(total!==1?'s':'')+' · '+activos+' activo'+(activos!==1?'s':'');
+      renderTable(rows);
+    } catch(e){
+      adminTableWrap.innerHTML='<div class="a-empty">⚠ Error al cargar. Revisa la conexión.</div>';
+    }
+  }
+
+  function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function renderTable(rows){
+    if(!rows.length){
+      adminTableWrap.innerHTML='<div class="a-empty">No hay clientes registrados aún.<br>Agrega el primero con el formulario de arriba.</div>';
+      return;
+    }
+    var html='<table class="admin-table"><thead><tr><th>Correo</th><th>Nombre</th><th>Estado</th><th>Fecha</th><th></th></tr></thead><tbody>';
+    rows.forEach(function(r){
+      var fecha=r.creado_en?new Date(r.creado_en).toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'}):'—';
+      html+='<tr>';
+      html+='<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+escH(r.email)+'">'+escH(r.email)+'</td>';
+      html+='<td>'+escH(r.nombre||'—')+'</td>';
+      html+='<td><span class="abadge '+(r.activo?'on':'off')+'">'+(r.activo?'✓ Activo':'✗ Inactivo')+'</span></td>';
+      html+='<td style="white-space:nowrap;font-size:12px;">'+fecha+'</td>';
+      html+='<td><div class="a-act-btns">';
+      html+='<button class="a-act-btn" onclick="pucAdmToggle(\''+escH(r.id)+'\','+r.activo+')">'+(r.activo?'Desactivar':'Activar')+'</button>';
+      html+='<button class="a-act-btn del" onclick="pucAdmDel(\''+escH(r.id)+'\',\''+escH(r.email)+'\')">Eliminar</button>';
+      html+='</div></td>';
+      html+='</tr>';
+    });
+    html+='</tbody></table>';
+    adminTableWrap.innerHTML=html;
+  }
+
+  /* ── Agregar cliente ─────────────────────────────────────── */
+  adminAddBtn.addEventListener('click', doAddCliente);
+  adminNewEmail.addEventListener('keydown', function(e){ if(e.key==='Enter') doAddCliente(); });
+
+  async function doAddCliente(){
+    var email  = adminNewEmail.value.trim().toLowerCase();
+    var nombre = adminNewNombre.value.trim();
+    adminAddErr.classList.remove('show');
+    if(!email||!email.includes('@')||!email.includes('.')){
+      adminAddErr.textContent='Ingresa un correo válido.';
+      adminAddErr.classList.add('show'); adminNewEmail.focus(); return;
+    }
+    adminAddBtn.disabled=true; adminAddBtn.textContent='Agregando…';
+    try {
+      var r = await sbPost('/rest/v1/accesos',{email:email,nombre:nombre||null,activo:true});
+      if(Array.isArray(r)&&r.length>0){
+        adminNewEmail.value=''; adminNewNombre.value='';
+        await loadAccesos();
+      } else if(r&&r.code==='23505'){
+        adminAddErr.textContent='Este correo ya está registrado en la lista.';
+        adminAddErr.classList.add('show');
+      } else {
+        adminAddErr.textContent='Error al agregar. Intenta de nuevo.';
+        adminAddErr.classList.add('show');
+      }
+    } catch(e){
+      adminAddErr.textContent='Error de conexión.';
+      adminAddErr.classList.add('show');
+    }
+    adminAddBtn.disabled=false; adminAddBtn.textContent='+ Agregar';
+  }
+
+  /* ── Toggle activo / Eliminar ────────────────────────────── */
+  window.pucAdmToggle = async function(id, activo){
+    await sbPatch('/rest/v1/accesos?id=eq.'+id,{activo:!activo});
+    await loadAccesos();
+  };
+  window.pucAdmDel = async function(id, email){
+    if(!confirm('¿Eliminar el acceso de '+email+'?\nEsta acción no se puede deshacer.')) return;
+    await sbDelete('/rest/v1/accesos?id=eq.'+id);
+    await loadAccesos();
+  };
+
 })();
 </script>
+
+<!-- ── Panel de Administración ─────────────────────────────── -->
+<div id="adminModal">
+  <div class="admin-card">
+    <button class="admin-close" id="adminCloseBtn" title="Cerrar">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+
+    <!-- Pantalla: login -->
+    <div id="adminLoginWrap">
+      <p class="admin-h2">🔒 Panel de Administración</p>
+      <p class="admin-sub">Ingresa la contraseña de Jennifer para gestionar los correos autorizados.</p>
+      <input class="gate-input" type="password" id="adminPassInp"
+        placeholder="Contraseña" style="text-align:left;margin-bottom:12px;">
+      <button class="gate-btn" id="adminLoginBtn">Entrar al panel</button>
+      <div class="gate-error" id="adminLoginErr"></div>
+    </div>
+
+    <!-- Pantalla: gestión de clientes -->
+    <div id="adminDashWrap" style="display:none;">
+      <p class="admin-h2">👥 Gestión de Accesos</p>
+      <p class="admin-sub" id="adminTotalTxt">Cargando lista…</p>
+
+      <!-- Agregar nuevo cliente -->
+      <div class="admin-row">
+        <input class="gate-input" type="email" id="adminNewEmail"
+          placeholder="correo@cliente.com" style="text-align:left;margin:0;" autocomplete="off">
+        <input class="gate-input n-inp" type="text" id="adminNewNombre"
+          placeholder="Nombre (opcional)" style="text-align:left;margin:0;">
+        <button class="admin-add" id="adminAddBtn">+ Agregar</button>
+      </div>
+      <div class="gate-error" id="adminAddErr" style="margin-bottom:14px;"></div>
+
+      <!-- Tabla de clientes -->
+      <div id="adminTableWrap">
+        <div class="a-loading">Cargando…</div>
+      </div>
+
+      <p style="font-size:11px;color:var(--text-muted);margin-top:18px;text-align:center;line-height:1.6;">
+        Los cambios son <strong>inmediatos</strong> — sin redesplegar.<br>
+        El cliente activo puede ingresar en cualquier momento.
+      </p>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
