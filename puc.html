@@ -2213,6 +2213,311 @@ const SC = {
         note:'Valor en libros: '+COP(vl)+' | '+(diff>0?'Utilidad: '+COP(diff):diff<0?'Pérdida: '+COP(Math.abs(diff)):'Sin utilidad ni pérdida')+'. Actualiza el código del activo según su tipo (1524 oficina, 1528 cómputo, 1540 vehículo).'
       };
     }
+  },
+
+  /* ── CLASE 1 — ACTIVO ─────────────────────────────────── */
+  ajuste_inventario:{
+    info:'Ajuste por sobrante o faltante de inventario detectado en toma física. El faltante se lleva a gasto; el sobrante a ingreso.',
+    fields:[
+      {id:'base', lbl:'Valor del ajuste ($)', ph:'500.000'},
+      {id:'tipo', lbl:'Tipo de ajuste', type:'select', opts:[{v:'faltante',l:'Faltante (gasto)'},{v:'sobrante',l:'Sobrante (ingreso)'}]}
+    ],
+    gen:f=>{
+      const falt = f.tipo==='faltante';
+      return {
+        lines: falt
+          ? [{code:'6155',name:'Ajuste de inventarios — faltante',db:f.base,cr:0},{code:'1435',name:'Mercancías no fabricadas por la empresa',db:0,cr:f.base}]
+          : [{code:'1435',name:'Mercancías no fabricadas por la empresa',db:f.base,cr:0},{code:'4295',name:'Sobrante de inventario — ingreso',db:0,cr:f.base}],
+        note: falt
+          ? 'El faltante reduce el inventario (CR 1435) y genera un gasto (DB 6155). Investiga la causa: hurto, daño, error.'
+          : 'El sobrante aumenta el inventario (DB 1435) y genera un ingreso (CR 4295). Documenta el hallazgo en el acta de toma física.'
+      };
+    }
+  },
+
+  cobro_cliente_parcial:{
+    info:'Cobro parcial de una factura a crédito. El saldo pendiente permanece en cuentas por cobrar.',
+    fields:[
+      {id:'total',   lbl:'Total de la factura ($)',   ph:'5.000.000'},
+      {id:'abono',   lbl:'Valor recibido hoy ($)',    ph:'2.000.000'}
+    ],
+    gen:f=>{
+      const saldo=f.total-f.abono;
+      return {
+        lines:[
+          {code:'1110',  name:'Bancos — moneda nacional',db:f.abono,cr:0},
+          {code:'130505',name:'Clientes — cuentas por cobrar',db:0,cr:f.abono},
+        ],
+        note:'Saldo pendiente del cliente: '+COP(saldo)+'. El total de la factura ('+COP(f.total)+') quedó registrado al momento de la venta a crédito.'
+      };
+    }
+  },
+
+  /* ── CLASE 2 — PASIVO ─────────────────────────────────── */
+  anticipo_cliente:{
+    info:'Recibo de anticipo de un cliente antes de entregar el bien o servicio. Es un pasivo hasta que se perfeccione la venta.',
+    fields:[{id:'base',lbl:'Valor del anticipo ($)',ph:'3.000.000'}],
+    gen:f=>({
+      lines:[
+        {code:'1110',  name:'Bancos — moneda nacional',         db:f.base,cr:0},
+        {code:'260505',name:'Anticipos y avances de clientes',  db:0,cr:f.base},
+      ],
+      note:'Al entregar el bien/servicio: DB 260505 / CR 4135 (Ingresos por servicios) o 4120 (Ingresos por ventas). En ese momento se causa el IVA si aplica.'
+    })
+  },
+
+  oblig_laboral:{
+    info:'Causación de obligaciones laborales al cierre: vacaciones y cesantías. Se reconocen como pasivo del período.',
+    fields:[
+      {id:'vac',  lbl:'Vacaciones causadas ($)',  ph:'800.000'},
+      {id:'ces',  lbl:'Cesantías causadas ($)',    ph:'1.200.000'}
+    ],
+    gen:f=>({
+      lines:[
+        {code:'510506',name:'Vacaciones — gastos de personal',     db:f.vac,cr:0},
+        {code:'510515',name:'Cesantías — gastos de personal',      db:f.ces,cr:0},
+        {code:'250505',name:'Vacaciones por pagar',                db:0,cr:f.vac},
+        {code:'250510',name:'Cesantías por pagar',                 db:0,cr:f.ces},
+      ],
+      note:'Las vacaciones se causan mensualmente (1/12 del salario). Las cesantías se liquidan al 31 de diciembre y se consignan al fondo antes del 14 de febrero.'
+    })
+  },
+
+  /* ── CLASE 3 — PATRIMONIO ─────────────────────────────── */
+  aporte_socios:{
+    info:'Aporte de capital en efectivo por parte de los socios o accionistas al constituir o capitalizar la empresa.',
+    fields:[{id:'base',lbl:'Valor del aporte ($)',ph:'50.000.000'}],
+    gen:f=>({
+      lines:[
+        {code:'1110',  name:'Bancos — moneda nacional',db:f.base,cr:0},
+        {code:'310505',name:'Capital suscrito y pagado',db:0,cr:f.base},
+      ],
+      note:'Si el aporte es en especie (activos): DB cuenta del activo / CR 310505. Debe estar respaldado por escritura pública o acta de junta según tipo societario.'
+    })
+  },
+
+  reserva_legal:{
+    info:'Apropiación obligatoria del 10% de las utilidades netas hasta alcanzar el 50% del capital suscrito (art. 452 C. Comercio).',
+    fields:[{id:'utilidad',lbl:'Utilidad neta del período ($)',ph:'20.000.000'}],
+    gen:f=>{
+      const res=Math.round(f.utilidad*0.10);
+      return {
+        lines:[
+          {code:'360505',name:'Utilidades del ejercicio',db:res,cr:0},
+          {code:'330505',name:'Reserva legal',           db:0,cr:res},
+        ],
+        note:'Reserva legal (10%): '+COP(res)+'. Solo se hace cuando hay utilidades. Se registra en la reunión ordinaria de asamblea o junta (dentro de los 3 meses siguientes al cierre).'
+      };
+    }
+  },
+
+  capitalizacion:{
+    info:'Capitalización de utilidades retenidas: los socios deciden convertir utilidades acumuladas en capital social.',
+    fields:[{id:'base',lbl:'Valor a capitalizar ($)',ph:'30.000.000'}],
+    gen:f=>({
+      lines:[
+        {code:'370505',name:'Utilidades acumuladas',   db:f.base,cr:0},
+        {code:'310505',name:'Capital suscrito y pagado',db:0,cr:f.base},
+      ],
+      note:'Requiere reforma estatutaria e inscripción en Cámara de Comercio. Aumenta el capital social sin flujo de caja.'
+    })
+  },
+
+  /* ── CLASE 4 — INGRESOS ───────────────────────────────── */
+  ingreso_financiero:{
+    info:'Reconocimiento de intereses ganados en CDT, cuentas de ahorro o cualquier inversión financiera.',
+    fields:[{id:'base',lbl:'Valor de los intereses ganados ($)',ph:'450.000'}],
+    gen:f=>({
+      lines:[
+        {code:'1110',  name:'Bancos — moneda nacional',     db:f.base,cr:0},
+        {code:'421005',name:'Intereses — ingresos financieros',db:0,cr:f.base},
+      ],
+      note:'Si la retención en la fuente es aplicada por el banco (7%), registra DB 1110 neto + DB 135515 (Rte Fte a favor) / CR 421005 bruto.'
+    })
+  },
+
+  devolucion_ventas:{
+    info:'Devolución de mercancía por parte del cliente. Reduce los ingresos y recupera el inventario.',
+    fields:[
+      {id:'base',  lbl:'Valor de la devolución ($)', ph:'800.000'},
+      {id:'iva',   lbl:'¿Tenía IVA 19%?', type:'select', opts:[{v:'no',l:'No'},{v:'si',l:'Sí'}]}
+    ],
+    gen:f=>{
+      const iva=f.iva==='si'?Math.round(f.base*0.19):0;
+      const lines=[
+        {code:'412010',name:'Devoluciones en ventas',db:f.base,cr:0},
+        {code:'1435',  name:'Mercancías no fabricadas por la empresa',db:f.base,cr:0},
+        {code:'130505',name:'Clientes — cuentas por cobrar',db:0,cr:f.base},
+        {code:'6135',  name:'Costo de ventas',db:0,cr:f.base},
+      ];
+      if(iva>0){
+        lines.splice(2,0,{code:'2408',name:'IVA generado (reversa)',db:iva,cr:0});
+        lines[3].cr+=iva;
+      }
+      return {lines, note:'La devolución reversa tanto el ingreso como el costo. Emite nota crédito al cliente. IVA devuelto: '+COP(iva)+'.'};
+    }
+  },
+
+  ingreso_servicios:{
+    info:'Causación de ingreso por prestación de servicios profesionales o técnicos.',
+    fields:[
+      {id:'base',lbl:'Valor del servicio ($)',ph:'2.500.000'},
+      {id:'rf',  lbl:'% Retención en la fuente',type:'select',opts:[{v:'0',l:'0% (no aplica)'},{v:'10',l:'10% (honorarios)'},{v:'3.5',l:'3.5% (servicios)'}]}
+    ],
+    gen:f=>{
+      const rft=Math.round(f.base*parseFloat(f.rf)/100);
+      const neto=f.base-rft;
+      const lines=[
+        {code:'130505',name:'Clientes — cuentas por cobrar',db:f.base,cr:0},
+        {code:'413505',name:'Ingresos por servicios',db:0,cr:f.base},
+      ];
+      if(rft>0) lines[0].db=neto, lines.splice(1,0,{code:'135515',name:'Anticipo rte fte a favor',db:rft,cr:0});
+      return {lines, note:'Retención practicada por el cliente: '+COP(rft)+'. Neto recibido: '+COP(neto)+'.'};
+    }
+  },
+
+  /* ── CLASE 5 — GASTOS ─────────────────────────────────── */
+  gasto_papeleria:{
+    info:'Compra de papelería y útiles de oficina para uso inmediato (se llevan directo a gasto, no a activo).',
+    fields:[{id:'base',lbl:'Valor de la compra ($)',ph:'150.000'}],
+    gen:f=>({
+      lines:[
+        {code:'513035',name:'Útiles y papelería — gastos administración',db:f.base,cr:0},
+        {code:'1110',  name:'Bancos — moneda nacional',db:0,cr:f.base},
+      ],
+      note:'Si el valor es alto y el beneficio es de varios períodos, clasifícalo como cargo diferido (191505) y amortízalo mensualmente.'
+    })
+  },
+
+  seguro_prepagado:{
+    info:'Pago de póliza de seguro o cualquier gasto pagado por anticipado. Se activa y se amortiza mes a mes.',
+    fields:[
+      {id:'prima',  lbl:'Prima total pagada ($)',  ph:'3.600.000'},
+      {id:'meses',  lbl:'Vigencia en meses',       ph:'12'}
+    ],
+    gen:f=>{
+      const cuota=Math.round(f.prima/f.meses);
+      return {
+        lines:[
+          {code:'170505',name:'Seguros pagados por anticipado',db:f.prima,cr:0},
+          {code:'1110',  name:'Bancos — moneda nacional',db:0,cr:f.prima},
+        ],
+        note:'Cuota mensual a amortizar: '+COP(cuota)+'. Cada mes: DB 529010 (Seguros — Gasto) / CR 170505. Al finalizar la vigencia el saldo es cero.'
+      };
+    }
+  },
+
+  /* ── CLASE 6 — COSTOS DE VENTA ────────────────────────── */
+  cmv:{
+    info:'Registro del costo de la mercancía vendida (CMV). Se registra simultáneamente con el ingreso de la venta.',
+    fields:[{id:'costo',lbl:'Costo de la mercancía vendida ($)',ph:'1.500.000'}],
+    gen:f=>({
+      lines:[
+        {code:'613505',name:'Costo de ventas — mercancía',          db:f.costo,cr:0},
+        {code:'1435',  name:'Mercancías no fabricadas por la empresa',db:0,cr:f.costo},
+      ],
+      note:'Registra este asiento junto con la venta. El margen bruto = Ingreso por venta − CMV. Usa sistema de inventario permanente (kardex) para tener el costo actualizado.'
+    })
+  },
+
+  devolucion_compras:{
+    info:'Devolución de mercancía al proveedor. Reduce el inventario y el pasivo con el proveedor.',
+    fields:[
+      {id:'base',lbl:'Valor de la devolución ($)',ph:'500.000'},
+      {id:'iva', lbl:'¿Tenía IVA 19%?',type:'select',opts:[{v:'no',l:'No'},{v:'si',l:'Sí'}]}
+    ],
+    gen:f=>{
+      const iva=f.iva==='si'?Math.round(f.base*0.19):0;
+      const lines=[
+        {code:'220505',name:'Proveedores — cuentas por pagar',db:f.base,cr:0},
+        {code:'1435',  name:'Mercancías no fabricadas por la empresa',db:0,cr:f.base},
+      ];
+      if(iva>0){
+        lines[0].db+=iva;
+        lines.splice(1,0,{code:'240802',name:'IVA descontable (reversa)',db:0,cr:iva});
+      }
+      return {lines,note:'Obtén nota débito del proveedor. IVA revertido: '+COP(iva)+'. El proveedor debe emitir nota crédito para respaldar la devolución.'};
+    }
+  },
+
+  descuento_compras:{
+    info:'Descuento comercial o por pronto pago otorgado por el proveedor en el momento de la compra.',
+    fields:[
+      {id:'factura',   lbl:'Valor factura bruta ($)',  ph:'5.000.000'},
+      {id:'descuento', lbl:'% de descuento',           ph:'5'}
+    ],
+    gen:f=>{
+      const desc=Math.round(f.factura*f.descuento/100);
+      const neto=f.factura-desc;
+      return {
+        lines:[
+          {code:'1435',  name:'Mercancías no fabricadas por la empresa',db:neto,cr:0},
+          {code:'619510',name:'Descuentos en compras',                  db:desc,cr:0},
+          {code:'220505',name:'Proveedores — cuentas por pagar',         db:0,cr:f.factura},
+        ],
+        note:'Descuento: '+COP(desc)+'. Neto a pagar: '+COP(neto)+'. El descuento comercial reduce el costo; el descuento financiero (por pronto pago) va a ingreso 4250.'
+      };
+    }
+  },
+
+  /* ── CLASE 7 — COSTO DE PRODUCCIÓN ───────────────────── */
+  mp_consumida:{
+    info:'Traslado de materia prima del almacén al proceso productivo. Sale de activo y entra al costo de producción.',
+    fields:[{id:'base',lbl:'Valor de la materia prima consumida ($)',ph:'4.000.000'}],
+    gen:f=>({
+      lines:[
+        {code:'710505',name:'Materia prima utilizada en producción',db:f.base,cr:0},
+        {code:'143505',name:'Materias primas',db:0,cr:f.base},
+      ],
+      note:'Controla el consumo con órdenes de producción u hojas de costo. Al terminar: DB 1465 (Productos en proceso) / CR 710505.'
+    })
+  },
+
+  mano_obra_directa:{
+    info:'Causación de la mano de obra directa (MOD): trabajadores que intervienen físicamente en la fabricación.',
+    fields:[
+      {id:'salario', lbl:'Salario bruto MOD ($)', ph:'3.000.000'},
+      {id:'ss',      lbl:'Seguridad social emp. ($)', ph:'350.000'}
+    ],
+    gen:f=>({
+      lines:[
+        {code:'720505',name:'Sueldos — mano de obra directa',db:f.salario,cr:0},
+        {code:'721505',name:'Seguridad social — MOD',       db:f.ss,     cr:0},
+        {code:'250505',name:'Nómina por pagar',             db:0,cr:f.salario},
+        {code:'250605',name:'Seguridad social por pagar',   db:0,cr:f.ss},
+      ],
+      note:'La MOD se acumula en la clase 7. Al cerrar la orden: DB 1465 (Productos en proceso) / CR 720505+721505. Distingue de MO indirecta (CIF clase 7 también).'
+    })
+  },
+
+  cif_aplicados:{
+    info:'Aplicación de costos indirectos de fabricación (CIF) a la orden de producción usando una tasa predeterminada.',
+    fields:[
+      {id:'horas', lbl:'Horas de MOD en la orden', ph:'100'},
+      {id:'tasa',  lbl:'Tasa CIF por hora ($)',     ph:'15.000'}
+    ],
+    gen:f=>{
+      const total=f.horas*f.tasa;
+      return {
+        lines:[
+          {code:'1465',  name:'Productos en proceso',         db:total,cr:0},
+          {code:'730505',name:'CIF aplicados — producción',   db:0,cr:total},
+        ],
+        note:'CIF aplicados: '+COP(total)+' ('+f.horas+' h × '+COP(f.tasa)+'). La variación entre CIF reales y aplicados (sub/sobreaplicación) se ajusta al cierre del período contra 6135 o 4295.'
+      };
+    }
+  },
+
+  producto_terminado:{
+    info:'Traslado de productos terminados desde producción en proceso al almacén de productos terminados.',
+    fields:[{id:'costo',lbl:'Costo de producción total ($)',ph:'12.000.000'}],
+    gen:f=>({
+      lines:[
+        {code:'1460',name:'Productos terminados',    db:f.costo,cr:0},
+        {code:'1465',name:'Productos en proceso',    db:0,cr:f.costo},
+      ],
+      note:'Este asiento cierra la orden de producción. El costo incluye MP + MOD + CIF. Al vender: DB 7135 (CMV producción) / CR 1460.'
+    })
   }
 
 }; // fin SC
@@ -2332,48 +2637,67 @@ function paintEntry(res, label){
 
 // ── Escenarios: lista estructurada para el picker ─────────
 const SCENARIOS_LIST = [
-  { grp:'💰 Ventas e Ingresos', items:[
-    {v:'venta_contado',       l:'Venta de contado, sin IVA'},
-    {v:'venta_contado_iva',   l:'Venta de contado con IVA 19%'},
-    {v:'venta_credito',       l:'Venta a crédito, sin IVA'},
-    {v:'venta_credito_iva',   l:'Venta a crédito con IVA 19%'},
-    {v:'venta_gc',            l:'Venta a gran contribuyente (RF + reteiva)'},
-    {v:'cobro_cartera',       l:'Cobro de cartera en banco'},
+  { grp:'1️⃣ Clase 1 — Activo', items:[
+    {v:'compra_contado',        l:'Compra mercancía de contado'},
+    {v:'compra_activo',         l:'Compra de activo fijo'},
+    {v:'cobro_cartera',         l:'Cobro de cartera en banco'},
+    {v:'cobro_cliente_parcial', l:'Cobro parcial a cliente'},
+    {v:'cdt',                   l:'Constitución de CDT'},
+    {v:'caja_menor',            l:'Apertura de caja menor'},
+    {v:'deprc',                 l:'Depreciación mensual activo fijo'},
+    {v:'venta_activo',          l:'Venta de activo fijo (util. o pérdida)'},
+    {v:'prov_cartera',          l:'Provisión de cartera (deudas malas)'},
+    {v:'ajuste_inventario',     l:'Ajuste de inventario (sobrante / faltante)'},
   ]},
-  { grp:'🛒 Compras y Proveedores', items:[
-    {v:'compra_contado',      l:'Compra mercancía de contado'},
-    {v:'compra_credito',      l:'Compra mercancía a crédito, sin IVA'},
-    {v:'compra_credito_iva',  l:'Compra mercancía a crédito con IVA 19%'},
-    {v:'compra_activo',       l:'Compra activo fijo'},
-    {v:'pago_prov',           l:'Pago total a proveedor'},
+  { grp:'2️⃣ Clase 2 — Pasivo', items:[
+    {v:'compra_credito',        l:'Compra a crédito, sin IVA'},
+    {v:'compra_credito_iva',    l:'Compra a crédito con IVA 19%'},
+    {v:'pago_prov',             l:'Pago total a proveedor'},
+    {v:'prestamo',              l:'Préstamo bancario recibido'},
+    {v:'cuota',                 l:'Pago cuota préstamo (capital + intereses)'},
+    {v:'anticipo_cliente',      l:'Anticipo recibido de cliente'},
+    {v:'oblig_laboral',         l:'Causación vacaciones y cesantías'},
+    {v:'pago_iva',              l:'Pago IVA bimestral (neto)'},
+    {v:'pago_rf',               l:'Pago retenciones practicadas'},
+    {v:'prov_renta',            l:'Provisión impuesto de renta'},
   ]},
-  { grp:'👔 Nómina y Personal', items:[
-    {v:'nomina_caus',         l:'Causación de nómina (salario bruto)'},
-    {v:'nomina_pago',         l:'Pago de nómina (banco)'},
-    {v:'prestaciones',        l:'Causación prestaciones sociales'},
+  { grp:'3️⃣ Clase 3 — Patrimonio', items:[
+    {v:'aporte_socios',         l:'Aporte de capital de socios'},
+    {v:'reserva_legal',         l:'Apropiación de reserva legal (10%)'},
+    {v:'capitalizacion',        l:'Capitalización de utilidades acumuladas'},
+    {v:'dividendos',            l:'Distribución de dividendos'},
   ]},
-  { grp:'📝 Gastos y Servicios', items:[
-    {v:'honor_pn',            l:'Honorarios persona natural (RF 10%)'},
-    {v:'honor_pj',            l:'Honorarios persona jurídica (IVA + RF 11%)'},
-    {v:'arrend',              l:'Pago de arrendamiento (RF 3.5%)'},
-    {v:'serv_pub',            l:'Pago servicios públicos'},
-    {v:'deprc',               l:'Depreciación mensual activo fijo'},
+  { grp:'4️⃣ Clase 4 — Ingresos', items:[
+    {v:'venta_contado',         l:'Venta de contado, sin IVA'},
+    {v:'venta_contado_iva',     l:'Venta de contado con IVA 19%'},
+    {v:'venta_credito',         l:'Venta a crédito, sin IVA'},
+    {v:'venta_credito_iva',     l:'Venta a crédito con IVA 19%'},
+    {v:'venta_gc',              l:'Venta a gran contribuyente (RF + reteiva)'},
+    {v:'ingreso_servicios',     l:'Ingreso por prestación de servicios'},
+    {v:'ingreso_financiero',    l:'Intereses ganados (CDT / ahorro)'},
+    {v:'devolucion_ventas',     l:'Devolución en ventas'},
   ]},
-  { grp:'🏦 Bancos y Financiero', items:[
-    {v:'prestamo',            l:'Préstamo bancario recibido'},
-    {v:'cuota',               l:'Pago cuota préstamo (capital + intereses)'},
-    {v:'caja_menor',          l:'Apertura de caja menor'},
-    {v:'cdt',                 l:'Constitución de CDT'},
+  { grp:'5️⃣ Clase 5 — Gastos', items:[
+    {v:'nomina_caus',           l:'Causación de nómina (salario bruto)'},
+    {v:'nomina_pago',           l:'Pago de nómina (banco)'},
+    {v:'prestaciones',          l:'Causación prestaciones sociales'},
+    {v:'honor_pn',              l:'Honorarios persona natural (RF 10%)'},
+    {v:'honor_pj',              l:'Honorarios persona jurídica (IVA + RF 11%)'},
+    {v:'arrend',                l:'Pago de arrendamiento (RF 3.5%)'},
+    {v:'serv_pub',              l:'Pago servicios públicos'},
+    {v:'gasto_papeleria',       l:'Compra de papelería y útiles'},
+    {v:'seguro_prepagado',      l:'Póliza de seguro prepagada'},
   ]},
-  { grp:'⚖️ Impuestos', items:[
-    {v:'pago_iva',            l:'Pago IVA bimestral (neto)'},
-    {v:'pago_rf',             l:'Pago retenciones practicadas'},
-    {v:'prov_renta',          l:'Provisión impuesto de renta'},
+  { grp:'6️⃣ Clase 6 — Costos de Venta', items:[
+    {v:'cmv',                   l:'Costo de mercancía vendida (CMV)'},
+    {v:'devolucion_compras',    l:'Devolución de mercancía al proveedor'},
+    {v:'descuento_compras',     l:'Descuento en compras'},
   ]},
-  { grp:'📋 Ajustes y Cierre', items:[
-    {v:'prov_cartera',        l:'Provisión de cartera'},
-    {v:'dividendos',          l:'Distribución de dividendos'},
-    {v:'venta_activo',        l:'Venta de activo fijo (util. o pérdida)'},
+  { grp:'7️⃣ Clase 7 — Costo de Producción', items:[
+    {v:'mp_consumida',          l:'Consumo de materia prima'},
+    {v:'mano_obra_directa',     l:'Mano de obra directa (MOD)'},
+    {v:'cif_aplicados',         l:'CIF aplicados a la orden'},
+    {v:'producto_terminado',    l:'Traslado a productos terminados'},
   ]},
 ];
 
