@@ -896,18 +896,18 @@ mark{
       <img id="gateLogoImg" src="" alt="Jennifer Roman Contadora Pública">
     </div>
 
-    <!-- Estado: verificar correo -->
+    <!-- Estado: ingresar correo -->
     <div id="gateFormWrap">
-      <h2>Verificar Acceso</h2>
-      <p class="gate-desc">Ingresa tu correo electrónico para activar tu acceso personal a esta herramienta.</p>
+      <h2>Bienvenido 👋</h2>
+      <p class="gate-desc">Ingresa el correo electrónico con el que compraste esta herramienta.</p>
       <input class="gate-input" type="email" id="gateEmail"
-        placeholder="tu@correo.com" autocomplete="email" spellcheck="false">
+        placeholder="tucorreo@gmail.com" autocomplete="email" spellcheck="false">
       <button class="gate-btn" id="gateSubmitBtn">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 17z"/></svg>
-        Activar acceso
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        Ingresar
       </button>
       <div class="gate-error" id="gateError"></div>
-      <p class="gate-note">¿No tienes acceso? Contáctanos para adquirir tu licencia.</p>
+      <p class="gate-note">¿Aún no tienes acceso? Escríbele a <a href="mailto:jennifer@tudominio.com">Jennifer Roman</a>.</p>
     </div>
 
     <!-- Estado: sin token -->
@@ -2399,25 +2399,20 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
 
 // ═══════════════════════════════════════════════════════════
 //  ACCESS CONTROL — Jennifer Roman PUC Colombia
-//  Sistema simple: token en URL → acceso permanente
+//  Sistema: el cliente ingresa su correo → Jennifer lo autoriza
 // ═══════════════════════════════════════════════════════════
 (function initAccessControl(){
 
   // ══════════════════════════════════════════════════════════
-  //  🔑 TOKENS VÁLIDOS — Agrega uno nuevo por cada venta
-  //  Para generar un token nuevo: Math.random().toString(36).slice(2,10).toUpperCase()
-  //  Formato del link: https://tudominio.com/?k=ELTOKEN
+  //  📧 CORREOS AUTORIZADOS — agrega uno por cada venta
+  //  Ejemplo:  'cliente@gmail.com',
   // ══════════════════════════════════════════════════════════
-  const TOKENS_VALIDOS = [
-  'D6981AE0',
-  '15333466',
-  'FC4679E6',
-  '23DB99E8',
-  'CEF92E84'
+  const CORREOS_AUTORIZADOS = [
+    'demo@jenniferroman.com',   // ← correo de prueba (puedes borrarlo)
   ];
   // ══════════════════════════════════════════════════════════
 
-  const STORAGE_KEY = 'puc_jr_access';
+  const STORAGE_KEY = 'puc_jr_email';
   const gate  = document.getElementById('accessGate');
   const appEl = document.querySelector('.app');
   const fab   = document.getElementById('fabAsiento');
@@ -2426,44 +2421,54 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
   const topbarLogo = document.querySelector('.jr-logo img');
   if(topbarLogo) document.getElementById('gateLogoImg').src = topbarLogo.src;
 
-  // Token en la URL
-  const params   = new URLSearchParams(window.location.search);
-  const urlToken = (params.get('k') || params.get('token') || '').toUpperCase();
-
-  // ── 1. ¿Ya tiene acceso guardado? ─────────────────────────
-  if(localStorage.getItem(STORAGE_KEY) === 'ok'){
+  // ── ¿Ya tiene acceso guardado? ────────────────────────────
+  const savedEmail = localStorage.getItem(STORAGE_KEY);
+  if(savedEmail && CORREOS_AUTORIZADOS.includes(savedEmail)){
     unlockPage(); return;
+  } else if(savedEmail){
+    localStorage.removeItem(STORAGE_KEY);
   }
 
-  // ── 2. ¿Viene con token válido en la URL? ─────────────────
-  if(urlToken && TOKENS_VALIDOS.includes(urlToken)){
-    localStorage.setItem(STORAGE_KEY, 'ok');
-    // Limpiar token de la URL
-    window.history.replaceState({}, '', window.location.pathname);
-    unlockPage(); return;
-  }
-
-  // ── 3. Sin acceso → mostrar gate ──────────────────────────
+  // ── Mostrar la pantalla de acceso ─────────────────────────
   appEl.style.display = 'none';
   fab.style.display   = 'none';
   gate.style.display  = 'flex';
-
-  // Ocultar formulario de correo (no se usa en modo simple)
-  document.getElementById('gateFormWrap').style.display   = 'none';
-  document.getElementById('gateDeniedWrap').style.display = 'block';
-
-  // Token inválido → mensaje específico
-  if(urlToken && !TOKENS_VALIDOS.includes(urlToken)){
-    document.querySelector('#gateDeniedWrap h2').textContent = 'Código no válido';
-    document.querySelector('#gateDeniedWrap .gate-desc').innerHTML =
-      'El código de acceso no es válido o ya no está activo.<br><br>Contacta a <strong>Jennifer Roman</strong> para verificar tu acceso.';
-  }
+  document.getElementById('gateFormWrap').style.display   = 'block';
+  document.getElementById('gateDeniedWrap').style.display = 'none';
 
   function unlockPage(){
     gate.style.display  = 'none';
     appEl.style.display = '';
     fab.style.display   = '';
   }
+
+  // ── Verificar correo ──────────────────────────────────────
+  const submitBtn = document.getElementById('gateSubmitBtn');
+  const errorEl   = document.getElementById('gateError');
+  const emailInp  = document.getElementById('gateEmail');
+
+  function doVerify(){
+    const email = emailInp.value.trim().toLowerCase();
+    errorEl.classList.remove('show');
+
+    if(!email || !email.includes('@') || !email.includes('.')){
+      errorEl.textContent = 'Ingresa un correo electrónico válido.';
+      errorEl.classList.add('show');
+      emailInp.focus(); return;
+    }
+
+    if(CORREOS_AUTORIZADOS.includes(email)){
+      localStorage.setItem(STORAGE_KEY, email);
+      unlockPage();
+    } else {
+      errorEl.innerHTML = 'Este correo no tiene acceso autorizado.<br><small>Verifica que sea el mismo correo que diste a Jennifer al comprar.</small>';
+      errorEl.classList.add('show');
+      emailInp.select();
+    }
+  }
+
+  submitBtn.addEventListener('click', doVerify);
+  emailInp.addEventListener('keydown', function(e){ if(e.key==='Enter') doVerify(); });
 
 })();
 </script>
