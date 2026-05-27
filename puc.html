@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PUC Colombia — Jennifer Roman Contadora Pública</title>
+<title>Catálogo de Cuentas (con base PUC) — Jennifer Roman Contadora Pública</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,600&display=swap" rel="stylesheet">
 <style>
 /* ─── TOKENS ─────────────────────────────────────────────── */
@@ -991,6 +991,14 @@ mark{
 </head>
 <body>
 
+<!-- ── Maintenance Screen ──────────────────────────────────── -->
+<div id="maintenanceScreen" style="display:none;position:fixed;inset:0;z-index:9999;background:var(--bg);display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px;text-align:center;padding:32px;">
+  <div style="font-size:52px;">🔧</div>
+  <h2 style="font-family:var(--font-d);font-size:24px;font-weight:700;color:var(--text);margin:0;">Sitio en mantenimiento</h2>
+  <p style="color:var(--text-muted);font-size:15px;max-width:340px;margin:0;line-height:1.6;">Estamos mejorando la herramienta.<br>Vuelve en unos minutos.</p>
+  <p style="color:var(--text-muted);font-size:13px;margin:0;">¿Tienes dudas? Escríbele a <a href="https://wa.me/573002929868" style="color:var(--brand);text-decoration:none;">Jennifer Roman</a></p>
+</div>
+
 <!-- ── Access Gate ────────────────────────────────────────── -->
 <div id="accessGate">
   <div class="gate-card">
@@ -1043,7 +1051,7 @@ mark{
 
   <!-- HEADER -->
   <header class="header">
-    <h1>Plan Único de Cuentas</h1>
+    <h1>Catálogo de Cuentas <span style="font-size:0.55em;font-weight:500;opacity:0.65;letter-spacing:0.01em;">(con base PUC)</span></h1>
     <p>Consulta interactiva del PUC de Colombia. Busca por código o nombre, filtra por clase, y explora la naturaleza, comportamiento y ejemplos de cada cuenta.</p>
   </header>
 
@@ -3121,6 +3129,34 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
 //  Almacenamiento: Supabase (gestión dinámica desde la página)
 // ═══════════════════════════════════════════════════════════
 (function initAccessControl(){
+
+  /* ══════════════════════════════════════════════════════════
+     🔧 MANTENIMIENTO
+     true  → muestra pantalla de mantenimiento (bloquea todo)
+     false → funciona normal
+  ══════════════════════════════════════════════════════════ */
+  const MANTENIMIENTO = true;
+  const esLocal = location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  /* ──────────────────────────────────────────────────────── */
+
+  if(esLocal){
+    // Local: mostrar app directo, sin gate, sin Supabase
+    document.getElementById('maintenanceScreen').style.display = 'none';
+    document.getElementById('accessGate').style.display = 'none';
+    document.querySelector('.app').style.display = '';
+    const fab2 = document.getElementById('fabAsiento');
+    if(fab2) fab2.style.display = '';
+    return;
+  }
+
+  if(MANTENIMIENTO){
+    document.getElementById('maintenanceScreen').style.display = 'flex';
+    document.getElementById('accessGate').style.display = 'none';
+    document.querySelector('.app').style.display = 'none';
+    const fab = document.getElementById('fabAsiento');
+    if(fab) fab.style.display = 'none';
+    return;
+  }
 
   /* ══════════════════════════════════════════════════════════
      🔒 CONTROL DE ACCESO
