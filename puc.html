@@ -34,10 +34,14 @@
   --ingreso:     #15803D;
   /* Gastos   → Ámbar oscuro (erogación) */
   --gasto:       #B45309;
-  /* Costos   → Carmesí oscuro (COGS, producción) */
+  /* C. Ventas    → Carmesí oscuro */
   --costo:       #9F1239;
+  /* C. Producción → Terracota oscuro */
+  --costo-v:     #7C2D12;
   /* Orden    → Gris pizarra (informativas) */
   --orden:       #475569;
+  /* Reguladora → Ámbar (contra-naturaleza) */
+  --reg:         #B45309;
   --radius:      14px;
   --radius-sm:   8px;
   --shadow:      0 2px 8px rgba(18,42,86,0.08), 0 1px 3px rgba(18,42,86,0.05);
@@ -225,8 +229,10 @@ body{
 .fbtn[data-c="5"].on{background:rgba(180,83,9,.08);border-color:var(--gasto);color:var(--gasto);}
 .fbtn[data-c="6"] .dot{background:var(--costo);}
 .fbtn[data-c="6"].on{background:rgba(159,18,57,.08);border-color:var(--costo);color:var(--costo);}
-.fbtn[data-c="7"] .dot{background:var(--orden);}
-.fbtn[data-c="7"].on{background:rgba(71,85,105,.08);border-color:var(--orden);color:var(--orden);}
+.fbtn[data-c="7"] .dot{background:var(--costo-v);}
+.fbtn[data-c="7"].on{background:rgba(124,45,18,.08);border-color:var(--costo-v);color:var(--costo-v);}
+.fbtn[data-c="8"] .dot{background:var(--orden);}
+.fbtn[data-c="8"].on{background:rgba(71,85,105,.08);border-color:var(--orden);color:var(--orden);}
 
 /* ─── STATS BAR ───────────────────────────────────────────── */
 .stats{
@@ -391,7 +397,8 @@ body{
 .clase-4{--card-accent:var(--ingreso);}
 .clase-5{--card-accent:var(--gasto);}
 .clase-6{--card-accent:var(--costo);}
-.clase-7{--card-accent:var(--orden);}
+.clase-7{--card-accent:var(--costo-v);}
+.clase-8{--card-accent:var(--orden);}
 
 /* class-badge colours — optimizados para fondo blanco */
 .cb-1{background:rgba(3,105,161,.09);color:var(--activo);}
@@ -400,7 +407,8 @@ body{
 .cb-4{background:rgba(21,128,61,.09);color:var(--ingreso);}
 .cb-5{background:rgba(180,83,9,.09);color:var(--gasto);}
 .cb-6{background:rgba(159,18,57,.09);color:var(--costo);}
-.cb-7{background:rgba(71,85,105,.09);color:var(--orden);}
+.cb-7{background:rgba(124,45,18,.09);color:var(--costo-v);}
+.cb-8{background:rgba(71,85,105,.09);color:var(--orden);}
 
 /* nature pill */
 .np-db{
@@ -410,6 +418,18 @@ body{
 .np-cr{
   background:rgba(185,28,28,.07);
   color:var(--pasivo);border-color:rgba(185,28,28,.28);
+}
+/* reguladora badge */
+.reg-badge{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:10px;font-weight:700;
+  padding:3px 8px;border-radius:100px;
+  background:rgba(180,83,9,.10);
+  color:var(--reg);
+  border:1px solid rgba(180,83,9,.30);
+  letter-spacing:.3px;
+  text-transform:uppercase;
+  white-space:nowrap;
 }
 
 /* ─── LOAD MORE ───────────────────────────────────────────── */
@@ -485,7 +505,7 @@ mark{
   .fbtn{padding:6px 11px;font-size:12px;}
   .card{padding:14px 16px;}
   .card-code{font-size:16px;}
-  .card-right .class-badge,.card-right .nature-pill{display:none;}
+  .card-right .class-badge,.card-right .nature-pill,.card-right .reg-badge{display:none;}
   .detail-grid{grid-template-columns:1fr 1fr;}
   .footer{flex-direction:column;align-items:flex-start;}
   .footer-legal{text-align:left;}
@@ -1049,8 +1069,9 @@ mark{
     <button class="fbtn" data-c="3"><span class="dot"></span> Patrimonio <span class="cnt" id="cnt-3">0</span></button>
     <button class="fbtn" data-c="4"><span class="dot"></span> Ingresos <span class="cnt" id="cnt-4">0</span></button>
     <button class="fbtn" data-c="5"><span class="dot"></span> Gastos <span class="cnt" id="cnt-5">0</span></button>
-    <button class="fbtn" data-c="6"><span class="dot"></span> Costos <span class="cnt" id="cnt-6">0</span></button>
-    <button class="fbtn" data-c="7"><span class="dot"></span> Orden <span class="cnt" id="cnt-7">0</span></button>
+    <button class="fbtn" data-c="6"><span class="dot"></span> C. Ventas <span class="cnt" id="cnt-6">0</span></button>
+    <button class="fbtn" data-c="7"><span class="dot"></span> C. Producción <span class="cnt" id="cnt-7">0</span></button>
+    <button class="fbtn" data-c="8"><span class="dot"></span> Orden <span class="cnt" id="cnt-8">0</span></button>
   </div>
 
   <!-- STATS -->
@@ -1241,7 +1262,7 @@ const PUC = [
 {c:"1360", n:"Reclamaciones",                           cl:1, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Derechos de cobro por siniestros o reclamos. Ejemplo: Reclamo a aseguradora por robo de mercancía $5.000.000."},
 {c:"1365", n:"Cuentas por cobrar a trabajadores",       cl:1, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Préstamos o anticipos a empleados. Ejemplo: Préstamo de nómina a empleado Carlos por $1.000.000."},
 {c:"1380", n:"Deudores varios",                         cl:1, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Otras cuentas por cobrar diversas. Ejemplo: Venta de activo fijo usado, saldo por cobrar $3.000.000."},
-{c:"1399", n:"Provisiones (cartera)",                   cl:1, nv:"Cuenta",    nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Estimación de pérdidas en cartera — RESTA al activo (cuenta de valuación). Ejemplo: Provisión del 10% sobre deudores de difícil cobro."},
+{c:"1399", n:"Provisiones (cartera)",                   cl:1, nv:"Cuenta",    nat:"Crédito", au:"Crédito", di:"Débito",  cn:true, ej:"Cuenta reguladora: RESTA al activo de cartera. Aumenta por Crédito (contrario al activo). Ejemplo: Provisión del 10% sobre deudores de difícil cobro $500.000."},
 {c:"14",   n:"Inventarios",                             cl:1, nv:"Grupo",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Bienes destinados a la venta o a la producción. Ejemplo: mercancía en bodega, materias primas, productos terminados."},
 {c:"1405", n:"Materias primas",                         cl:1, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Material base para fabricar productos. Ejemplo: Compra de tela por $8.000.000 para producir camisas."},
 {c:"1410", n:"Productos en proceso",                    cl:1, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Productos en fase de fabricación. Ejemplo: Camisas a medio terminar valoradas en $3.000.000."},
@@ -1257,14 +1278,14 @@ const PUC = [
 {c:"1524", n:"Equipo de oficina",                       cl:1, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Muebles, enseres y equipos de oficina. Ejemplo: Escritorios y sillas $5.000.000. Vida útil 10 años."},
 {c:"1528", n:"Equipo de computación y comunicación",    cl:1, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Computadores, servidores, telecomunicaciones. Ejemplo: 10 laptops $25.000.000. Vida útil 3 años."},
 {c:"1540", n:"Flota y equipo de transporte",            cl:1, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Vehículos propios de la empresa. Ejemplo: Camión de reparto $120.000.000. Vida útil 5 años."},
-{c:"1592", n:"Depreciación acumulada",                  cl:1, nv:"Cuenta",    nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Desgaste acumulado de los activos fijos — RESTA al activo (cuenta de valuación). Ejemplo: Depreciación acumulada del edificio $50.000.000. Se abona cada período."},
+{c:"1592", n:"Depreciación acumulada",                  cl:1, nv:"Cuenta",    nat:"Crédito", au:"Crédito", di:"Débito",  cn:true, ej:"Cuenta reguladora: RESTA a la propiedad planta y equipo. Aumenta por Crédito (contrario al activo). Ejemplo: Depreciación acumulada del edificio $50.000.000. Crédito mensual con cargo al gasto de depreciación (5160)."},
 {c:"16",   n:"Intangibles",                             cl:1, nv:"Grupo",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Activos sin forma física pero con valor económico. Ejemplo: marcas, patentes, licencias, goodwill."},
 {c:"1605", n:"Crédito mercantil (goodwill)",            cl:1, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Prima pagada al adquirir un negocio por encima de su valor en libros. Ejemplo: Se pagan $50.000.000 extras por la reputación de la empresa adquirida."},
 {c:"1610", n:"Marcas",                                  cl:1, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Registro de marcas comerciales propias. Ejemplo: Registro de marca por $3.000.000."},
 {c:"1615", n:"Patentes",                                cl:1, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Derechos de invención reconocidos legalmente. Ejemplo: Patente de nuevo proceso productivo $10.000.000."},
 {c:"1620", n:"Concesiones y franquicias",               cl:1, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Derecho adquirido para operar una franquicia. Ejemplo: Franquicia de restaurante de comida rápida $100.000.000."},
 {c:"1625", n:"Derechos (licencias de software)",        cl:1, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Licencias de software y derechos similares. Ejemplo: Licencia de sistema ERP $5.000.000."},
-{c:"1698", n:"Amortización acumulada de intangibles",   cl:1, nv:"Cuenta",    nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Amortización acumulada — RESTA al activo intangible (cuenta de valuación). Ejemplo: Amortización acumulada de marca $1.000.000/año."},
+{c:"1698", n:"Amortización acumulada de intangibles",   cl:1, nv:"Cuenta",    nat:"Crédito", au:"Crédito", di:"Débito",  cn:true, ej:"Cuenta reguladora: RESTA al intangible. Aumenta por Crédito (contrario al activo). Ejemplo: Marca registrada $10.000.000, amortización anual $1.000.000 → después de 3 años: amortización acum. $3.000.000."},
 {c:"17",   n:"Diferidos (activo)",                      cl:1, nv:"Grupo",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Gastos pagados por adelantado que benefician períodos futuros. Ejemplo: seguros prepagados, arrendamientos anticipados."},
 {c:"1705", n:"Gastos pagados por anticipado",           cl:1, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Pagos realizados que se amortizan en el tiempo. Ejemplo: Seguro anual por $6.000.000 pagado en enero (se amortiza $500.000/mes)."},
 {c:"1710", n:"Cargos diferidos",                        cl:1, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Costos que benefician varios períodos futuros. Ejemplo: Gastos de puesta en marcha de la empresa $4.000.000."},
@@ -1323,10 +1344,14 @@ const PUC = [
 {c:"3315", n:"Reservas ocasionales",                    cl:3, nv:"Cuenta",    nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Reservas creadas por decisión de la asamblea general. Ejemplo: Reserva de $20.000.000 para compra de maquinaria aprobada en asamblea."},
 {c:"36",   n:"Resultados del ejercicio",                cl:3, nv:"Grupo",     nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Resultado neto del período contable actual (utilidad o pérdida del año en curso)."},
 {c:"3605", n:"Utilidad del ejercicio",                  cl:3, nv:"Cuenta",    nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Ganancia neta del período. Suma al patrimonio. Ejemplo: Utilidad neta del año $80.000.000."},
-{c:"3610", n:"Pérdida del ejercicio",                   cl:3, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Pérdida neta del período. RESTA al patrimonio. Ejemplo: Pérdida del ejercicio $15.000.000 → Débito Pérdida del Ejercicio."},
+{c:"3610", n:"Pérdida del ejercicio",                   cl:3, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", cn:true, ej:"Cuenta reguladora: RESTA al patrimonio. Aumenta por Débito (contrario al patrimonio). Ejemplo: Pérdida neta del período $15.000.000 → Débito 3610 / Crédito cierre de resultados."},
 {c:"37",   n:"Resultados de ejercicios anteriores",     cl:3, nv:"Grupo",     nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Utilidades o pérdidas acumuladas de períodos anteriores pendientes de distribución."},
 {c:"3705", n:"Utilidades acumuladas",                   cl:3, nv:"Cuenta",    nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Utilidades de años anteriores no distribuidas. Ejemplo: Utilidades retenidas de ejercicios previos $120.000.000."},
-{c:"3710", n:"Pérdidas acumuladas",                     cl:3, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Pérdidas de años anteriores que restan al patrimonio. Ejemplo: Pérdidas acumuladas de dos períodos anteriores $25.000.000."},
+{c:"3710", n:"Pérdidas acumuladas",                     cl:3, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", cn:true, ej:"Cuenta reguladora: RESTA al patrimonio acumulado. Aumenta por Débito (contrario al patrimonio). Ejemplo: Pérdidas acumuladas de dos períodos anteriores $25.000.000 que disminuyen el patrimonio neto."},
+{c:"34",   n:"Revalorización del patrimonio",            cl:3, nv:"Grupo",     nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Ajuste por inflación al patrimonio bajo PCGA colombiano. Ejemplo: Ajuste por corrección monetaria del capital $5.000.000."},
+{c:"3405", n:"Capital fiscal",                          cl:3, nv:"Cuenta",    nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Revalorización del capital social por ajuste por inflación. Ejemplo: Capital $100M revalorizado a $105M → Crédito $5.000.000."},
+{c:"35",   n:"Dividendos o participaciones decretados en acciones o cuotas",cl:3,nv:"Grupo",nat:"Débito", au:"Débito",  di:"Crédito", cn:true, ej:"Cuenta reguladora: registra dividendos decretados en acciones (no en efectivo), RESTA provisionalmente al patrimonio. Ejemplo: Asamblea decreta dividendos en acciones por $20.000.000."},
+{c:"3505", n:"Dividendos decretados en acciones",       cl:3, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", cn:true, ej:"Cuenta reguladora de patrimonio. Ejemplo: Dividendo en acciones por $20.000.000 → Débito 3505 / Crédito 3105 (al capitalizar)."},
 {c:"38",   n:"Superávit por valorizaciones",            cl:3, nv:"Grupo",     nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Contrapartida de las valorizaciones de activos (Clase 1 grupo 19). Ejemplo: Edificio se valoriza $100M → Crédito Superávit Valorizaciones."},
 
 // ── CLASE 4: INGRESOS ──────────────────────────────────────
@@ -1339,7 +1364,7 @@ const PUC = [
 {c:"4145", n:"Transporte, almacenamiento y comunicaciones",cl:4,nv:"Cuenta",  nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Ingresos por transporte y logística. Ejemplo: Fletes cobrados $15.000.000."},
 {c:"4155", n:"Actividades inmobiliarias y de alquiler", cl:4, nv:"Cuenta",    nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Arriendos operacionales. Ejemplo: Arrendamiento de locales $8.000.000/mes."},
 {c:"4165", n:"Servicios sociales y de salud",           cl:4, nv:"Cuenta",    nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Ingresos de prestadores de salud. Ejemplo: Consultas médicas $20.000.000/mes."},
-{c:"4175", n:"Devoluciones, rebajas y descuentos en ventas",cl:4,nv:"Cuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"RESTA a los ingresos (cuenta reguladora). Ejemplo: Cliente devuelve mercancía defectuosa $2.000.000 → Débito Devoluciones."},
+{c:"4175", n:"Devoluciones, rebajas y descuentos en ventas",cl:4,nv:"Cuenta", nat:"Débito",  au:"Débito",  di:"Crédito", cn:true, ej:"Cuenta reguladora: RESTA a los ingresos operacionales. Aumenta por Débito (contrario a los ingresos). Ejemplo: Cliente devuelve mercancía defectuosa $2.000.000 → Débito 4175 / Crédito 1305 (clientes)."},
 {c:"42",   n:"No operacionales",                        cl:4, nv:"Grupo",     nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Ingresos por actividades diferentes al objeto social. Ejemplo: intereses bancarios, dividendos recibidos, utilidades en venta de activos."},
 {c:"4210", n:"Financieros",                             cl:4, nv:"Cuenta",    nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Intereses y rendimientos financieros recibidos. Ejemplo: Intereses de CDT $1.200.000 causados."},
 {c:"4215", n:"Dividendos y participaciones",            cl:4, nv:"Cuenta",    nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Dividendos recibidos de inversiones en otras empresas. Ejemplo: Dividendos de acciones en Ecopetrol $3.000.000."},
@@ -1382,38 +1407,45 @@ const PUC = [
 {c:"5315", n:"Gastos extraordinarios",                  cl:5, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Gastos inusuales o poco frecuentes. Ejemplo: Multa por incumplimiento de contrato $3.000.000."},
 {c:"5320", n:"Gastos de ejercicios anteriores",         cl:5, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Gastos de períodos anteriores descubiertos en el período actual. Ejemplo: Factura de 2024 recibida en 2025 $500.000."},
 
-// ── CLASE 6: COSTOS DE PRODUCCIÓN ─────────────────────────
-{c:"6",    n:"Costos de producción",                    cl:6, nv:"Clase",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Costos directamente relacionados con la fabricación de productos. Incluye materia prima, mano de obra directa y costos indirectos de fabricación (CIF)."},
-{c:"61",   n:"Materia prima",                           cl:6, nv:"Grupo",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Materiales directos utilizados en la producción. Ejemplo: Tela para fabricar camisas, madera para muebles."},
-{c:"6105", n:"Materia prima",                           cl:6, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Costo de la materia prima consumida. Ejemplo: Se usan $8.000.000 en tela para producir 1.000 camisas."},
-{c:"62",   n:"Mano de obra directa",                    cl:6, nv:"Grupo",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Salarios y prestaciones del personal que transforma la materia prima. Ejemplo: salarios de operarios de producción."},
-{c:"6205", n:"Salarios (mano de obra directa)",          cl:6, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Salarios de los operarios de producción. Ejemplo: 10 operarios con salario mínimo = $13.000.000/mes."},
-{c:"6210", n:"Horas extras y recargos",                 cl:6, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Horas extras del personal de planta. Ejemplo: Horas extra en producción de temporada $2.000.000."},
-{c:"63",   n:"Costos indirectos de fabricación (CIF)",  cl:6, nv:"Grupo",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Costos de producción que no son MP ni MOD. Ejemplo: arriendo de planta, depreciación de maquinaria, servicios públicos de fábrica."},
-{c:"6305", n:"Arrendamientos (planta)",                 cl:6, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Arriendo de planta o fábrica. Ejemplo: Arriendo de planta de producción $8.000.000/mes."},
-{c:"6315", n:"Mantenimiento y reparaciones (planta)",   cl:6, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Mantenimiento de maquinaria. Ejemplo: Servicio preventivo de máquinas $1.500.000."},
-{c:"6320", n:"Depreciaciones (planta)",                 cl:6, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Depreciación de activos de producción. Ejemplo: Depreciación máquina industrial $800.000/mes."},
-{c:"6335", n:"Servicios públicos (planta)",             cl:5, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Energía y agua de la planta. Ejemplo: Energía planta $3.000.000 + agua $500.000."},
-{c:"6340", n:"Mano de obra indirecta",                  cl:6, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Personal de planta no involucrado directamente en producción. Ejemplo: Supervisor de planta $3.500.000."},
-{c:"66",   n:"Costos de producción en proceso",         cl:6, nv:"Grupo",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Acumulación de costos de producción en proceso de fabricación."},
-{c:"68",   n:"Inventario de productos en proceso",      cl:6, nv:"Grupo",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Control de productos semiterminados durante el proceso de producción."},
+// ── CLASE 6: COSTOS DE VENTAS ──────────────────────────────
+{c:"6",    n:"Costos de ventas",                        cl:6, nv:"Clase",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Costo de las mercancías o servicios vendidos. En comercio: costo de compra de lo vendido. En producción: costo de fabricación de lo vendido."},
+{c:"61",   n:"Costos de ventas — comercio",             cl:6, nv:"Grupo",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Costo de la mercancía vendida en empresas comerciales. Ejemplo: Celular vendido en $1.500.000, costo de compra $1.000.000."},
+{c:"6105", n:"Costo de ventas mercancías",              cl:6, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Al vender mercancía: Débito Costo de Ventas, Crédito Inventario. Ejemplo: Se vende mercancía con costo $20.000.000."},
+{c:"62",   n:"Costos de ventas — industria",            cl:6, nv:"Grupo",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Costo de los productos terminados vendidos. Ejemplo: Costo de las camisas vendidas transferido desde producción."},
+{c:"6205", n:"Costo de ventas productos terminados",    cl:6, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Transferencia del costo de productos vendidos. Ejemplo: Se venden camisas con costo total de producción $15.000.000."},
+{c:"63",   n:"Costos de ventas — servicios",            cl:6, nv:"Grupo",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Costo directo de los servicios prestados. Ejemplo: Mano de obra directa del técnico que instaló el sistema."},
+{c:"6305", n:"Costo de ventas de servicios",            cl:6, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Costo directo atribuible a servicios facturados. Ejemplo: Mano de obra técnico en instalación $800.000 + materiales $200.000."},
+{c:"64",   n:"Devoluciones, rebajas y descuentos",      cl:6, nv:"Grupo",     nat:"Crédito", au:"Crédito", di:"Débito",  cn:true, ej:"Cuenta reguladora del costo de ventas. RESTA al costo. Ejemplo: Devolución de mercancía al proveedor $3.000.000 → Crédito 6405."},
+{c:"6405", n:"Devoluciones en compras",                 cl:6, nv:"Cuenta",    nat:"Crédito", au:"Crédito", di:"Débito",  cn:true, ej:"Cuenta reguladora: RESTA al costo de ventas. Aumenta por Crédito (contrario al costo). Ejemplo: Se devuelven 50 unidades al proveedor, costo $3.000.000 → Crédito 6405 / Débito 2205."},
 
-// ── CLASE 7: COSTOS DE VENTAS ──────────────────────────────
-{c:"7",    n:"Costos de ventas",                        cl:7, nv:"Clase",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Costo de las mercancías o servicios vendidos. En comercio: costo de compra de lo vendido. En producción: costo de fabricación de lo vendido."},
-{c:"71",   n:"Costos de ventas — comercio",             cl:7, nv:"Grupo",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Costo de la mercancía vendida en empresas comerciales. Ejemplo: Celular vendido en $1.500.000, costo de compra $1.000.000."},
-{c:"7105", n:"Costo de ventas mercancías",              cl:7, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Al vender mercancía: Débito Costo de Ventas, Crédito Inventario. Ejemplo: Se vende mercancía con costo $20.000.000."},
-{c:"72",   n:"Costos de ventas — industria",            cl:7, nv:"Grupo",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Costo de los productos terminados vendidos. Ejemplo: Costo de las camisas vendidas transferido desde producción."},
-{c:"7205", n:"Costo de ventas productos terminados",    cl:7, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Transferencia del costo de productos vendidos. Ejemplo: Se venden camisas con costo total de producción $15.000.000."},
-{c:"73",   n:"Costos de ventas — servicios",            cl:7, nv:"Grupo",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Costo directo de los servicios prestados. Ejemplo: Mano de obra directa del técnico que instaló el sistema."},
+// ── CLASE 7: COSTOS DE PRODUCCIÓN ─────────────────────────
+{c:"7",    n:"Costos de producción",                    cl:7, nv:"Clase",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Costos directamente relacionados con la fabricación de productos. Incluye materia prima, mano de obra directa y costos indirectos de fabricación (CIF)."},
+{c:"71",   n:"Materia prima",                           cl:7, nv:"Grupo",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Materiales directos utilizados en la producción. Ejemplo: Tela para fabricar camisas, madera para muebles."},
+{c:"7105", n:"Materia prima",                           cl:7, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Costo de la materia prima consumida. Ejemplo: Se usan $8.000.000 en tela para producir 1.000 camisas."},
+{c:"72",   n:"Mano de obra directa",                    cl:7, nv:"Grupo",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Salarios y prestaciones del personal que transforma la materia prima. Ejemplo: salarios de operarios de producción."},
+{c:"7205", n:"Salarios (mano de obra directa)",         cl:7, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Salarios de los operarios de producción. Ejemplo: 10 operarios con salario mínimo = $13.000.000/mes."},
+{c:"7210", n:"Horas extras y recargos",                 cl:7, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Horas extras del personal de planta. Ejemplo: Horas extra en producción de temporada $2.000.000."},
+{c:"73",   n:"Costos indirectos de fabricación (CIF)",  cl:7, nv:"Grupo",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Costos de producción que no son MP ni MOD. Ejemplo: arriendo de planta, depreciación de maquinaria, servicios públicos de fábrica."},
+{c:"7305", n:"Arrendamientos (planta)",                 cl:7, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Arriendo de planta o fábrica. Ejemplo: Arriendo de planta de producción $8.000.000/mes."},
+{c:"7315", n:"Mantenimiento y reparaciones (planta)",   cl:7, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Mantenimiento de maquinaria. Ejemplo: Servicio preventivo de máquinas $1.500.000."},
+{c:"7320", n:"Depreciaciones (planta)",                 cl:7, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Depreciación de activos de producción. Ejemplo: Depreciación máquina industrial $800.000/mes."},
+{c:"7335", n:"Servicios públicos (planta)",             cl:7, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Servicios públicos del área de producción (CIF). Ejemplo: Energía planta $3.000.000 + agua $500.000/mes."},
+{c:"7340", n:"Mano de obra indirecta",                  cl:7, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Personal de planta no involucrado directamente en producción. Ejemplo: Supervisor de planta $3.500.000."},
+{c:"76",   n:"Costos de producción en proceso",         cl:7, nv:"Grupo",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Acumulación de costos de producción en proceso de fabricación."},
+{c:"78",   n:"Inventario de productos en proceso",      cl:7, nv:"Grupo",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Control de productos semiterminados durante el proceso de producción."},
 
 // ── CLASE 8 y 9: CUENTAS DE ORDEN ─────────────────────────
-{c:"8",    n:"Cuentas de orden deudoras",               cl:7, nv:"Clase",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Registro de activos o derechos contingentes que NO se reflejan en el balance. Ejemplo: bienes en comodato, garantías recibidas, activos totalmente depreciados."},
-{c:"81",   n:"Derechos contingentes",                   cl:7, nv:"Grupo",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Derechos que podrían convertirse en activos reales. Ejemplo: litigios a favor, contratos de compra futura."},
-{c:"83",   n:"Activos castigados",                      cl:7, nv:"Grupo",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Activos dados de baja contablemente pero aún con valor informativo. Ejemplo: cartera castigada que podría recuperarse."},
-{c:"89",   n:"Otras cuentas de orden deudoras",         cl:7, nv:"Grupo",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Otras contingencias activas. Ejemplo: Bienes recibidos en custodia, cheques posfechados recibidos."},
-{c:"9",    n:"Cuentas de orden acreedoras",             cl:7, nv:"Clase",     nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Contrapartida de las cuentas de orden deudoras. NO afectan activos ni pasivos reales. Ejemplo: 8105 Derechos Contingentes / 9105 Responsabilidades Contingentes."},
-{c:"91",   n:"Responsabilidades contingentes",          cl:7, nv:"Grupo",     nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Pasivos o responsabilidades contingentes. Ejemplo: Litigios en contra, avales y garantías otorgadas."},
-{c:"93",   n:"Activos y pasivos contingentes fiscales",  cl:7, nv:"Grupo",     nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Diferencias fiscales entre lo contable y lo tributario. Ejemplo: Diferencias temporales en depreciación."},
+{c:"8",    n:"Cuentas de orden deudoras",               cl:8, nv:"Clase",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Registro de activos o derechos contingentes que NO se reflejan en el balance. Ejemplo: bienes en comodato, garantías recibidas, activos totalmente depreciados."},
+{c:"81",   n:"Derechos contingentes",                   cl:8, nv:"Grupo",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Derechos que podrían convertirse en activos reales. Ejemplo: litigios a favor, contratos de compra futura."},
+{c:"8105", n:"Derechos contingentes de cobro",          cl:8, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Derechos por cobrar que dependen de una condición futura. Ejemplo: Sentencia judicial favorable pendiente de ejecutar $50.000.000."},
+{c:"83",   n:"Activos castigados",                      cl:8, nv:"Grupo",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Activos dados de baja contablemente pero aún con valor informativo. Ejemplo: cartera castigada que podría recuperarse."},
+{c:"8305", n:"Cartera castigada",                       cl:8, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Deudas de clientes dadas de baja por incobrabilidad pero aún con posibilidad de recupero. Ejemplo: Cartera castigada empresa en liquidación $8.000.000."},
+{c:"89",   n:"Otras cuentas de orden deudoras",         cl:8, nv:"Grupo",     nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Otras contingencias activas. Ejemplo: Bienes recibidos en custodia, cheques posfechados recibidos."},
+{c:"8905", n:"Bienes y valores recibidos en custodia",  cl:8, nv:"Cuenta",    nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Bienes de terceros bajo responsabilidad de la empresa. Ejemplo: Mercancía de cliente almacenada en bodega $15.000.000."},
+{c:"9",    n:"Cuentas de orden acreedoras",             cl:8, nv:"Clase",     nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Contrapartida de las cuentas de orden deudoras. NO afectan activos ni pasivos reales. Ejemplo: 8105 Derechos Contingentes / 9105 Responsabilidades Contingentes."},
+{c:"91",   n:"Responsabilidades contingentes",          cl:8, nv:"Grupo",     nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Pasivos o responsabilidades contingentes. Ejemplo: Litigios en contra, avales y garantías otorgadas."},
+{c:"9105", n:"Responsabilidades contingentes de pago",  cl:8, nv:"Cuenta",    nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Obligaciones que podrían materializarse. Ejemplo: Demanda laboral en contra con alta probabilidad de condena $20.000.000."},
+{c:"93",   n:"Activos y pasivos contingentes fiscales",  cl:8, nv:"Grupo",     nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Diferencias fiscales entre lo contable y lo tributario. Ejemplo: Diferencias temporales en depreciación."},
 
 
 // ── SUBCUENTAS ADICIONALES CLASE 1 (Activo) ───────────────
@@ -1425,17 +1457,17 @@ const PUC = [
 {c:"133510",n:"Préstamos a empleados - calamidad",         cl:1, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Préstamo por calamidad doméstica al trabajador. Ejemplo: Préstamo por emergencia familiar $2.000.000."},
 {c:"135505",n:"Anticipos a contratistas",                  cl:1, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Anticipo pagado a contratistas de obra o servicios. Ejemplo: 30% anticipo contrato de mantenimiento $6.000.000."},
 {c:"140510",n:"Mercancías en consignación",                cl:1, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Mercancía enviada a terceros para venta en consignación. Ejemplo: 100 artículos en consignación $5.000.000."},
-{c:"149905",n:"Provisión para inventarios",                cl:1, nv:"Cuenta",    nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Estimación de pérdida de valor en inventarios — RESTA al activo. Ejemplo: Provisión por obsolescencia de mercancía $1.500.000."},
+{c:"149905",n:"Provisión para inventarios",                cl:1, nv:"Cuenta",    nat:"Crédito", au:"Crédito", di:"Débito",  cn:true, ej:"Cuenta reguladora: RESTA a los inventarios. Aumenta por Crédito (contrario al activo). Ejemplo: Provisión por obsolescencia de mercancía $1.500.000 → Crédito 149905 / Débito 5195."},
 {c:"151605",n:"Oficinas",                                  cl:1, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Costo histórico de locales de oficina en propiedad. Ejemplo: Oficina adquirida por $300.000.000 en zona comercial."},
 {c:"151610",n:"Locales comerciales",                       cl:1, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Locales para actividades comerciales. Ejemplo: Local en centro comercial $250.000.000."},
 {c:"151615",n:"Bodegas",                                   cl:1, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Bodegas para almacenamiento y distribución. Ejemplo: Bodega de distribución $180.000.000."},
 {c:"152005",n:"Maquinaria industrial",                     cl:1, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Equipos de maquinaria del proceso productivo. Ejemplo: Línea de producción $200.000.000."},
 {c:"152010",n:"Equipo auxiliar de producción",             cl:1, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Equipos de apoyo a la producción. Ejemplo: Compresor + elevador de carga $15.000.000."},
-{c:"159205",n:"Depr. acumulada — Edificios",               cl:1, nv:"Subcuenta", nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Desgaste acumulado de edificios (vida útil 20 años, 5%/año). Ejemplo: Edificio $500M con 5 años → depr. acum. $125.000.000."},
-{c:"159215",n:"Depr. acumulada — Maquinaria y equipo",     cl:1, nv:"Subcuenta", nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Desgaste de maquinaria (10 años, 10%/año). Ejemplo: Máquina $80M con 3 años → depr. acum. $24.000.000."},
-{c:"159220",n:"Depr. acumulada — Equipo de oficina",       cl:1, nv:"Subcuenta", nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Desgaste muebles y enseres (10 años). Ejemplo: Mobiliario $5M → depr. anual $500.000."},
-{c:"159225",n:"Depr. acumulada — Equipo de cómputo",       cl:1, nv:"Subcuenta", nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Desgaste de computadores (3 años, 33%/año). Ejemplo: 10 laptops $25M → depr. anual $8.333.000."},
-{c:"159240",n:"Depr. acumulada — Vehículos",               cl:1, nv:"Subcuenta", nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Desgaste de vehículos (5 años, 20%/año). Ejemplo: Camión $120M → depr. anual $24.000.000."},
+{c:"159205",n:"Depr. acumulada — Edificios",               cl:1, nv:"Subcuenta", nat:"Crédito", au:"Crédito", di:"Débito",  cn:true, ej:"Cuenta reguladora: RESTA a edificios. Vida útil 20 años (5%/año). Ejemplo: Edificio $500M con 5 años → depr. acum. $125.000.000."},
+{c:"159215",n:"Depr. acumulada — Maquinaria y equipo",     cl:1, nv:"Subcuenta", nat:"Crédito", au:"Crédito", di:"Débito",  cn:true, ej:"Cuenta reguladora: RESTA a maquinaria. Vida útil 10 años (10%/año). Ejemplo: Máquina $80M con 3 años → depr. acum. $24.000.000."},
+{c:"159220",n:"Depr. acumulada — Equipo de oficina",       cl:1, nv:"Subcuenta", nat:"Crédito", au:"Crédito", di:"Débito",  cn:true, ej:"Cuenta reguladora: RESTA a equipo de oficina. Vida útil 10 años. Ejemplo: Mobiliario $5M → depr. anual $500.000."},
+{c:"159225",n:"Depr. acumulada — Equipo de cómputo",       cl:1, nv:"Subcuenta", nat:"Crédito", au:"Crédito", di:"Débito",  cn:true, ej:"Cuenta reguladora: RESTA a computadores. Vida útil 3 años (33%/año). Ejemplo: 10 laptops $25M → depr. anual $8.333.000."},
+{c:"159240",n:"Depr. acumulada — Vehículos",               cl:1, nv:"Subcuenta", nat:"Crédito", au:"Crédito", di:"Débito",  cn:true, ej:"Cuenta reguladora: RESTA a vehículos. Vida útil 5 años (20%/año). Ejemplo: Camión $120M → depr. anual $24.000.000."},
 
 // ── SUBCUENTAS ADICIONALES CLASE 2 (Pasivo) ───────────────
 {c:"210505",n:"Préstamos ordinarios — bancos",             cl:2, nv:"Subcuenta", nat:"Crédito", au:"Crédito", di:"Débito",  ej:"Crédito de libre inversión con banco. Ejemplo: Crédito libre inversión $20.000.000 a 24 meses con Banco de Bogotá."},
@@ -1508,23 +1540,32 @@ const PUC = [
 {c:"531505",n:"Multas, sanciones y litigios",              cl:5, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Sanciones impuestas por entidades de control. Ejemplo: Extemporaneidad declaración → sanción DIAN $1.500.000."},
 {c:"531510",n:"Donaciones y auxilios",                     cl:5, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Donaciones a fundaciones y entidades sin ánimo de lucro. Ejemplo: Donación fundación educativa $2.000.000."},
 
-// ── SUBCUENTAS ADICIONALES CLASE 6 (Costos de producción) ─
-{c:"620506",n:"Salarios — mano de obra directa",           cl:6, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Salario de operarios que transforman directamente la materia prima. Ejemplo: 10 operarios × $1.300.000 = $13.000.000."},
-{c:"620508",n:"Horas extras y recargos — MOD",             cl:6, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Horas extra del personal de producción en temporada alta. Ejemplo: Horas extra operarios noviembre $2.000.000."},
-{c:"620510",n:"Auxilio de transporte — MOD",               cl:6, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Subsidio de transporte de los operarios. Ejemplo: 10 operarios × $200.000 = $2.000.000."},
-{c:"620515",n:"Cesantías — MOD",                           cl:6, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Causación mensual de cesantías del personal de planta. Ejemplo: Nómina MOD $13M → cesantías $1.083.333."},
-{c:"620521",n:"Prima de servicios — MOD",                  cl:6, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Causación de prima semestral operarios. Ejemplo: Nómina $13M → causación prima $541.667."},
-{c:"620527",n:"Vacaciones — MOD",                          cl:6, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Causación de vacaciones del personal de producción. Ejemplo: Causación mensual $541.667."},
-{c:"620530",n:"Aporte patronal a salud — MOD (8.5%)",      cl:6, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Aporte empresa a EPS de operarios. Ejemplo: Nómina $13M → salud empresa $1.105.000."},
-{c:"620533",n:"Aporte patronal a pensión — MOD (12%)",     cl:6, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Aporte empresa a fondo de pensiones de operarios. Ejemplo: Nómina $13M → pensión empresa $1.560.000."},
-{c:"630510",n:"Energía eléctrica — planta",                cl:6, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Consumo de energía de la planta de producción (CIF). Ejemplo: Factura energía planta $4.500.000/mes."},
-{c:"630515",n:"Acueducto y alcantarillado — planta",       cl:6, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Consumo de agua industrial en producción. Ejemplo: Factura acueducto planta $800.000/mes."},
-{c:"630520",n:"Gas natural — planta",                      cl:6, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Gas para procesos de producción o calefacción industrial. Ejemplo: Gas industrial $1.200.000/mes."},
-{c:"630530",n:"Materiales indirectos",                     cl:6, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Materiales que no integran directamente el producto (CIF). Ejemplo: Empaques, adhesivos, etiquetas $900.000."},
-{c:"630535",n:"Herramientas y repuestos",                  cl:6, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Herramientas menores y repuestos de mantenimiento (CIF). Ejemplo: Llaves, martillos, rodamientos $600.000."},
-{c:"630540",n:"Control de calidad",                        cl:6, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Gastos de aseguramiento y control de calidad en producción. Ejemplo: Reactivos para pruebas $700.000."},
-{c:"630545",n:"Vigilancia y seguridad — planta",           cl:6, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Servicio de vigilancia de la planta de producción (CIF). Ejemplo: Vigilante turno noche planta $1.800.000/mes."},
-{c:"630550",n:"Mano de obra indirecta",                    cl:6, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Personal de planta no involucrado directamente en la fabricación (supervisores, mensajeros). Ejemplo: Supervisor de planta $3.500.000."},
+// ── SUBCUENTAS ADICIONALES CLASE 6 (Costos de ventas) ─────
+{c:"610505",n:"Costo de ventas — mercancía importada",      cl:6, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Costo de compra de mercancía importada al venderla. Ejemplo: Celulares importados vendidos, costo CIF $800.000 c/u × 100 = $80.000.000."},
+{c:"610510",n:"Costo de ventas — mercancía nacional",       cl:6, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Costo de compra de mercancía nacional al venderla. Ejemplo: Venta de ropa, costo de compra $12.000.000 en el mes."},
+{c:"620505",n:"Costo de productos terminados — manufactura",cl:6, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Costo total de fabricación de los productos vendidos. Ejemplo: 500 camisas vendidas a costo de producción $8.000/unidad = $4.000.000."},
+{c:"630505",n:"Sueldos — prestación del servicio",          cl:6, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Salarios del personal técnico que presta los servicios facturados. Ejemplo: Técnico de soporte $2.500.000/mes que genera ingresos directos."},
+{c:"630510",n:"Materiales — prestación del servicio",       cl:6, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Materiales consumidos al prestar un servicio. Ejemplo: Repuestos usados en mantenimiento de equipos de cliente $600.000."},
+{c:"640505",n:"Devoluciones en compras de mercancías",      cl:6, nv:"Subcuenta", nat:"Crédito", au:"Crédito", di:"Débito",  cn:true, ej:"Cuenta reguladora: RESTA al costo de ventas. Ejemplo: Se devuelven 20 unidades defectuosas al proveedor, costo $2.000.000 → Crédito 640505 / Débito 2205."},
+{c:"640510",n:"Descuentos en compras",                      cl:6, nv:"Subcuenta", nat:"Crédito", au:"Crédito", di:"Débito",  cn:true, ej:"Cuenta reguladora: descuento obtenido al pagar compras de contado. Ejemplo: Descuento del 2% sobre compra $10.000.000 = $200.000 → Crédito 640510."},
+
+// ── SUBCUENTAS ADICIONALES CLASE 7 (Costos de producción) ─
+{c:"720506",n:"Salarios — mano de obra directa",           cl:7, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Salario de operarios que transforman directamente la materia prima. Ejemplo: 10 operarios × $1.300.000 = $13.000.000."},
+{c:"720508",n:"Horas extras y recargos — MOD",             cl:7, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Horas extra del personal de producción en temporada alta. Ejemplo: Horas extra operarios noviembre $2.000.000."},
+{c:"720510",n:"Auxilio de transporte — MOD",               cl:7, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Subsidio de transporte de los operarios. Ejemplo: 10 operarios × $200.000 = $2.000.000."},
+{c:"720515",n:"Cesantías — MOD",                           cl:7, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Causación mensual de cesantías del personal de planta. Ejemplo: Nómina MOD $13M → cesantías $1.083.333."},
+{c:"720521",n:"Prima de servicios — MOD",                  cl:7, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Causación de prima semestral operarios. Ejemplo: Nómina $13M → causación prima $541.667."},
+{c:"720527",n:"Vacaciones — MOD",                          cl:7, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Causación de vacaciones del personal de producción. Ejemplo: Causación mensual $541.667."},
+{c:"720530",n:"Aporte patronal a salud — MOD (8.5%)",      cl:7, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Aporte empresa a EPS de operarios. Ejemplo: Nómina $13M → salud empresa $1.105.000."},
+{c:"720533",n:"Aporte patronal a pensión — MOD (12%)",     cl:7, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Aporte empresa a fondo de pensiones de operarios. Ejemplo: Nómina $13M → pensión empresa $1.560.000."},
+{c:"730510",n:"Energía eléctrica — planta",                cl:7, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Consumo de energía de la planta de producción (CIF). Ejemplo: Factura energía planta $4.500.000/mes."},
+{c:"730515",n:"Acueducto y alcantarillado — planta",       cl:7, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Consumo de agua industrial en producción. Ejemplo: Factura acueducto planta $800.000/mes."},
+{c:"730520",n:"Gas natural — planta",                      cl:7, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Gas para procesos de producción o calefacción industrial. Ejemplo: Gas industrial $1.200.000/mes."},
+{c:"730530",n:"Materiales indirectos",                     cl:7, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Materiales que no integran directamente el producto (CIF). Ejemplo: Empaques, adhesivos, etiquetas $900.000."},
+{c:"730535",n:"Herramientas y repuestos",                  cl:7, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Herramientas menores y repuestos de mantenimiento (CIF). Ejemplo: Llaves, martillos, rodamientos $600.000."},
+{c:"730540",n:"Control de calidad",                        cl:7, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Gastos de aseguramiento y control de calidad en producción. Ejemplo: Reactivos para pruebas $700.000."},
+{c:"730545",n:"Vigilancia y seguridad — planta",           cl:7, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Servicio de vigilancia de la planta de producción (CIF). Ejemplo: Vigilante turno noche planta $1.800.000/mes."},
+{c:"730550",n:"Mano de obra indirecta",                    cl:7, nv:"Subcuenta", nat:"Débito",  au:"Débito",  di:"Crédito", ej:"Personal de planta no involucrado directamente en la fabricación (supervisores, mensajeros). Ejemplo: Supervisor de planta $3.500.000."},
 
 ]; // fin PUC
 
@@ -1546,8 +1587,8 @@ const shownCount  = document.getElementById('shownCount');
 const totalCount  = document.getElementById('totalCount');
 
 // ── Class labels & colours ─────────────────────────────────
-const CLASS_LABEL = {1:'Activo',2:'Pasivo',3:'Patrimonio',4:'Ingresos',5:'Gastos',6:'Costos',7:'Orden'};
-const CLASS_CB    = {1:'cb-1',2:'cb-2',3:'cb-3',4:'cb-4',5:'cb-5',6:'cb-6',7:'cb-7'};
+const CLASS_LABEL = {1:'Activo',2:'Pasivo',3:'Patrimonio',4:'Ingresos',5:'Gastos',6:'C. Ventas',7:'C. Producción',8:'Orden'};
+const CLASS_CB    = {1:'cb-1',2:'cb-2',3:'cb-3',4:'cb-4',5:'cb-5',6:'cb-6',7:'cb-7',8:'cb-8'};
 
 // ── Highlight ──────────────────────────────────────────────
 function hl(text, q) {
@@ -1580,7 +1621,7 @@ function updateCounts() {
   };
   document.getElementById('cnt-todos').textContent =
     PUC.filter(a => !q || match(a)).length;
-  for (let i = 1; i <= 7; i++) {
+  for (let i = 1; i <= 8; i++) {
     document.getElementById(`cnt-${i}`).textContent =
       PUC.filter(a => a.cl === i && (!q || match(a))).length;
   }
@@ -1616,6 +1657,7 @@ function renderBatch(reset) {
     const nat = a.nat === 'Débito' ? 'Débito' : 'Crédito';
     const npClass = nat === 'Débito' ? 'np-db' : 'np-cr';
     const natArrow = nat === 'Débito' ? '↑ Débito' : '↑ Crédito';
+    const regBadge = a.cn ? `<span class="reg-badge">⬡ Reguladora</span>` : '';
 
     div.innerHTML = `
       <div class="card-top">
@@ -1628,6 +1670,7 @@ function renderBatch(reset) {
         </div>
         <div class="card-right">
           <span class="class-badge ${CLASS_CB[a.cl]}">${CLASS_LABEL[a.cl]}</span>
+          ${regBadge}
           <span class="nature-pill ${npClass}">${natArrow}</span>
           <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
@@ -1636,7 +1679,7 @@ function renderBatch(reset) {
         <div class="detail-grid">
           <div class="detail-item">
             <div class="detail-lbl">Naturaleza</div>
-            <div class="detail-val ${a.nat==='Débito'?'db':'cr'}">${a.nat}</div>
+            <div class="detail-val ${a.nat==='Débito'?'db':'cr'}">${a.nat}${a.cn ? ' · Reguladora' : ''}</div>
           </div>
           <div class="detail-item">
             <div class="detail-lbl">Aumenta con</div>
