@@ -1,0 +1,5 @@
+.DS_Store
+backend-acceso.js
+logo.jpeg
+node_modules/
+*.env
