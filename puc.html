@@ -5246,7 +5246,6 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
   const ADMIN_HASH = '7fd899ec4434899b63009976639d7a926f0d7fcc3751cc9033abdeeff1e56b2a';
   /* ──────────────────────────────────────────────────────── */
 
-  const STORAGE_KEY = 'puc_jr_email';
   const ADMIN_S_KEY = 'puc_jr_adm';
 
   /* ── Helpers REST ────────────────────────────────────────── */
@@ -5280,22 +5279,11 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
     document.getElementById('gateDeniedWrap').style.display='none';
   }
 
-  /* ── Verificar sesión guardada ───────────────────────────── */
-  const saved = sessionStorage.getItem(STORAGE_KEY);
-  if(saved){
-    unlockPage(); // mostrar de inmediato, validar en segundo plano
-    sbGet('/rest/v1/accesos?email=eq.'+encodeURIComponent(saved)+'&activo=eq.true&select=email')
-      .then(function(d){
-        if(!Array.isArray(d)||d.length===0){
-          sessionStorage.removeItem(STORAGE_KEY); lockPage();
-        }
-      }).catch(function(){});
-  } else {
-    appEl.style.display='none'; if(fab)fab.style.display='none';
-    gate.style.display='flex';
-    document.getElementById('gateFormWrap').style.display='block';
-    document.getElementById('gateDeniedWrap').style.display='none';
-  }
+  /* ── Siempre pedir correo al cargar la página ─────────────── */
+  appEl.style.display='none'; if(fab)fab.style.display='none';
+  gate.style.display='flex';
+  document.getElementById('gateFormWrap').style.display='block';
+  document.getElementById('gateDeniedWrap').style.display='none';
 
   /* ── Verificar correo al ingresar ────────────────────────── */
   const submitBtn = document.getElementById('gateSubmitBtn');
@@ -5314,7 +5302,7 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
     try {
       const d = await sbGet('/rest/v1/accesos?email=eq.'+encodeURIComponent(email)+'&activo=eq.true&select=email');
       if(Array.isArray(d)&&d.length>0){
-        sessionStorage.setItem(STORAGE_KEY,email); unlockPage();
+        unlockPage();
       } else {
         errorEl.innerHTML='Este correo no tiene acceso autorizado.<br><small>Verifica que sea el mismo correo que le diste a Jennifer al comprar.</small>';
         errorEl.classList.add('show'); emailInp.select();
