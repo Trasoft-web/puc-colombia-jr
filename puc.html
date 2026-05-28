@@ -5281,13 +5281,13 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
   }
 
   /* ── Verificar sesión guardada ───────────────────────────── */
-  const saved = localStorage.getItem(STORAGE_KEY);
+  const saved = sessionStorage.getItem(STORAGE_KEY);
   if(saved){
     unlockPage(); // mostrar de inmediato, validar en segundo plano
     sbGet('/rest/v1/accesos?email=eq.'+encodeURIComponent(saved)+'&activo=eq.true&select=email')
       .then(function(d){
         if(!Array.isArray(d)||d.length===0){
-          localStorage.removeItem(STORAGE_KEY); lockPage();
+          sessionStorage.removeItem(STORAGE_KEY); lockPage();
         }
       }).catch(function(){});
   } else {
@@ -5314,7 +5314,7 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
     try {
       const d = await sbGet('/rest/v1/accesos?email=eq.'+encodeURIComponent(email)+'&activo=eq.true&select=email');
       if(Array.isArray(d)&&d.length>0){
-        localStorage.setItem(STORAGE_KEY,email); unlockPage();
+        sessionStorage.setItem(STORAGE_KEY,email); unlockPage();
       } else {
         errorEl.innerHTML='Este correo no tiene acceso autorizado.<br><small>Verifica que sea el mismo correo que le diste a Jennifer al comprar.</small>';
         errorEl.classList.add('show'); emailInp.select();
