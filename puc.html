@@ -3593,7 +3593,7 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
      true  → muestra pantalla de mantenimiento (bloquea todo)
      false → funciona normal
   ══════════════════════════════════════════════════════════ */
-  const MANTENIMIENTO = true;
+  const MANTENIMIENTO = false;
   const esLocal = location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
   /* ──────────────────────────────────────────────────────── */
 
@@ -3621,7 +3621,7 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
      true  → activo   (pide correo al entrar)
      false → inactivo (entra directo, sin verificación)
   ══════════════════════════════════════════════════════════ */
-  const ACCESO_ACTIVO = false;
+  const ACCESO_ACTIVO = true;
   /* ──────────────────────────────────────────────────────── */
 
   if(!ACCESO_ACTIVO){
