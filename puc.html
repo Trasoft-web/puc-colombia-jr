@@ -5319,17 +5319,26 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
     (async function(){
       try{
         if(_wp.get('status')==='APPROVED'){
-          var props=(_wp.get('signature[properties]')||'id,status,amount_in_cents,currency').split(',');
-          var raw=props.map(function(p){return _wp.get(p)||'';}).join('')+WOMPI_INTEGRITY;
-          var hex=await wompiSHA256(raw);
-          if(hex===_wp.get('signature[checksum]')){
-            var pendingEmail=sessionStorage.getItem(WOMPI_EMAIL_KEY);
-            if(pendingEmail){
-              sessionStorage.removeItem(WOMPI_EMAIL_KEY);
-              await fetch(SB_URL+'/rest/v1/accesos?on_conflict=email',{method:'POST',headers:Object.assign(sbH(),{'Prefer':'resolution=merge-duplicates'}),body:JSON.stringify({email:pendingEmail,activo:true,nombre:''})});
-              unlockPage(); return;
-            } else { showGatePaySuccess(); return; }
+          var pendingEmail=sessionStorage.getItem(WOMPI_EMAIL_KEY);
+          // Intentar verificar firma
+          var sigOk=false;
+          try{
+            var props=(_wp.get('signature[properties]')||'id,status,amount_in_cents,currency').split(',');
+            var raw=props.map(function(p){return _wp.get(p)||'';}).join('')+WOMPI_INTEGRITY;
+            var hex=await wompiSHA256(raw);
+            sigOk=(hex===_wp.get('signature[checksum]'));
+          }catch(_){}
+          if(sigOk && pendingEmail){
+            // Caso ideal: firma válida + correo en sesión → registrar y abrir
+            sessionStorage.removeItem(WOMPI_EMAIL_KEY);
+            await fetch(SB_URL+'/rest/v1/accesos?on_conflict=email',{method:'POST',headers:Object.assign(sbH(),{'Prefer':'resolution=merge-duplicates'}),body:JSON.stringify({email:pendingEmail,activo:true,nombre:''})});
+            unlockPage(); return;
           }
+          // Firma falló o sin correo en sesión → mostrar form de confirmación
+          if(pendingEmail){ sessionStorage.removeItem(WOMPI_EMAIL_KEY); }
+          var payEl=document.getElementById('gatePayEmail');
+          if(payEl && pendingEmail) payEl.value=pendingEmail;
+          showGatePaySuccess(); return;
         }
       }catch(e){}
       showGateForm();
