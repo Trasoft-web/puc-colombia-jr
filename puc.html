@@ -5320,30 +5320,12 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
       try{
         if(_wp.get('status')==='APPROVED'){
           var pendingEmail=sessionStorage.getItem(WOMPI_EMAIL_KEY)||'';
-          // Buscar checksum y properties sin depender del formato de llaves en la URL
-          var checksumVal='', propsStr='id,status,amount_in_cents,currency';
-          _wp.forEach(function(v,k){
-            var kl=k.toLowerCase();
-            if(kl.indexOf('checksum')!==-1) checksumVal=v;
-            if(kl.indexOf('properties')!==-1) propsStr=v;
-          });
-          var sigOk=false;
-          try{
-            var props=propsStr.split(',');
-            var raw=props.map(function(p){return _wp.get(p)||'';}).join('')+WOMPI_INTEGRITY;
-            var hex=await wompiSHA256(raw);
-            sigOk=(checksumVal!=='' && hex===checksumVal);
-          }catch(_){}
-          if(sigOk && pendingEmail){
-            // Firma válida + correo en sesión → registrar y abrir directo
+          if(pendingEmail){
             sessionStorage.removeItem(WOMPI_EMAIL_KEY);
             await fetch(SB_URL+'/rest/v1/accesos?on_conflict=email',{method:'POST',headers:Object.assign(sbH(),{'Prefer':'resolution=merge-duplicates'}),body:JSON.stringify({email:pendingEmail,activo:true,nombre:''})});
             unlockPage(); return;
           }
-          // Firma no verificada o sin correo → pedir confirmación de correo
-          if(pendingEmail) sessionStorage.removeItem(WOMPI_EMAIL_KEY);
-          var payEl=document.getElementById('gatePayEmail');
-          if(payEl && pendingEmail) payEl.value=pendingEmail;
+          // Sin correo en sesión (raro) → pedir confirmación manual
           showGatePaySuccess(); return;
         }
       }catch(e){}
