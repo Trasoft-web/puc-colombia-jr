@@ -5406,14 +5406,26 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
         gatePayError.textContent='Ingresa un correo válido.'; gatePayError.classList.add('show'); return;
       }
       gatePayConfirmBtn.disabled=true;
-      gatePayConfirmBtn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>&nbsp;Activando…';
-      try{
-        await fetch(SB_URL+'/rest/v1/accesos?on_conflict=email',{method:'POST',headers:Object.assign(sbH(),{'Prefer':'resolution=merge-duplicates'}),body:JSON.stringify({email:em,activo:true,nombre:''})});
-        unlockPage();
-      }catch(e){
-        gatePayError.textContent='Error de conexión. Intenta de nuevo.'; gatePayError.classList.add('show');
-        gatePayConfirmBtn.disabled=false; gatePayConfirmBtn.textContent='Activar mi acceso';
+      gatePayConfirmBtn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>&nbsp;Verificando pago…';
+      // Intentar hasta 4 veces (20 seg) esperando que el webhook registre el correo
+      var intentos=0;
+      async function verificarAcceso(){
+        intentos++;
+        try{
+          var d=await sbGet('/rest/v1/accesos?email=eq.'+encodeURIComponent(em)+'&activo=eq.true&select=email');
+          if(Array.isArray(d)&&d.length>0){ unlockPage(); return; }
+        }catch(_){}
+        if(intentos<4){
+          gatePayConfirmBtn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>&nbsp;Verificando… ('+intentos+'/4)';
+          setTimeout(verificarAcceso,5000);
+        } else {
+          gatePayError.innerHTML='Tu pago está siendo procesado. <a href="https://wa.me/573145739340" target="_blank" rel="noopener">Escríbele a Jennifer</a> con tu correo y te activa en minutos.';
+          gatePayError.classList.add('show');
+          gatePayConfirmBtn.disabled=false;
+          gatePayConfirmBtn.textContent='Intentar de nuevo';
+        }
       }
+      verificarAcceso();
     });
     if(gatePayEmail) gatePayEmail.addEventListener('keydown', function(e){ if(e.key==='Enter') gatePayConfirmBtn.click(); });
   }
