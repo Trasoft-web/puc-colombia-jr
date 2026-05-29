@@ -1017,17 +1017,31 @@ mark{
         Ingresar
       </button>
       <div class="gate-error" id="gateError"></div>
-      <p class="gate-note">¿Aún no tienes acceso? Escríbele a <a href="mailto:jennifer@tudominio.com">Jennifer Roman</a>.</p>
+      <p class="gate-note">¿Aún no tienes acceso? <a href="https://wa.me/573145739340" target="_blank" rel="noopener">Compra tu acceso aquí</a>.</p>
       <p style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
         <a href="#" class="admin-link" id="adminOpenLinkGate" style="font-size:12px;opacity:.5;">⚙ Administración</a>
       </p>
     </div>
 
-    <!-- Estado: sin token -->
+    <!-- Estado: correo no tiene acceso → comprar -->
     <div id="gateDeniedWrap" style="display:none;">
-      <h2 style="color:var(--pasivo);">Acceso Restringido</h2>
-      <p class="gate-desc">Esta herramienta es de uso exclusivo para clientes de <strong>Jennifer Roman</strong>.<br><br>Para adquirir tu acceso, comunícate directamente con Jennifer.</p>
-      <p class="gate-note">📧 <a href="mailto:jennifer@tudominio.com">jennifer@tudominio.com</a></p>
+      <h2>Aún no tienes acceso</h2>
+      <p class="gate-desc">El correo <strong class="denied-email-txt"></strong> no está registrado.<br><br>Adquiere acceso permanente a la herramienta con un único pago.</p>
+      <button class="gate-btn" id="wompiPayBtn" style="margin-top:4px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        Comprar acceso — $15.000 COP
+      </button>
+      <p class="gate-note" style="margin-top:16px;">¿Ya compraste? <a href="#" id="backToEmailBtn">Intenta con otro correo</a></p>
+    </div>
+
+    <!-- Estado: pago exitoso → confirmar correo -->
+    <div id="gatePaySuccessWrap" style="display:none;">
+      <div style="font-size:38px;text-align:center;margin-bottom:4px;">✅</div>
+      <h2>¡Pago recibido!</h2>
+      <p class="gate-desc">Ingresa el correo con el que realizaste el pago para activar tu acceso.</p>
+      <input class="gate-input" type="email" id="gatePayEmail" placeholder="tucorreo@gmail.com" autocomplete="email" spellcheck="false">
+      <button class="gate-btn" id="gatePayConfirmBtn">Activar mi acceso</button>
+      <div class="gate-error" id="gatePayError"></div>
     </div>
   </div>
 </div>
@@ -5248,6 +5262,13 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
 
   const ADMIN_S_KEY = 'puc_jr_adm';
 
+  /* ── Wompi ────────────────────────────────────────────────
+     Cambiar a llaves de producción cuando se lance en vivo.
+  ──────────────────────────────────────────────────────────── */
+  const WOMPI_LINK      = 'https://checkout.wompi.co/l/test_VPOS_TvWpzc';
+  const WOMPI_INTEGRITY = 'test_integrity_q8NN0cYcEahYOajQDh7DgrtwAgepf85h';
+  const WOMPI_EMAIL_KEY = 'puc_wompi_email';
+
   /* ── Helpers REST ────────────────────────────────────────── */
   function sbH(extra){
     return Object.assign({'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},extra||{});
@@ -5279,11 +5300,46 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
     document.getElementById('gateDeniedWrap').style.display='none';
   }
 
-  /* ── Siempre pedir correo al cargar la página ─────────────── */
-  appEl.style.display='none'; if(fab)fab.style.display='none';
-  gate.style.display='flex';
-  document.getElementById('gateFormWrap').style.display='block';
-  document.getElementById('gateDeniedWrap').style.display='none';
+  /* ── Verificar retorno de Wompi o mostrar gate normal ─────── */
+  async function wompiSHA256(str){
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
+  }
+  function showGateForm(){ gate.style.display='flex'; appEl.style.display='none'; if(fab)fab.style.display='none'; document.getElementById('gateFormWrap').style.display='block'; document.getElementById('gateDeniedWrap').style.display='none'; document.getElementById('gatePaySuccessWrap').style.display='none'; }
+  function showGateDenied(em){ gate.style.display='flex'; appEl.style.display='none'; if(fab)fab.style.display='none'; document.getElementById('gateFormWrap').style.display='none'; document.getElementById('gatePaySuccessWrap').style.display='none'; document.getElementById('gateDeniedWrap').style.display='block'; var el=document.querySelector('.denied-email-txt'); if(el) el.textContent=em; }
+  function showGatePaySuccess(){ gate.style.display='flex'; appEl.style.display='none'; if(fab)fab.style.display='none'; document.getElementById('gateFormWrap').style.display='none'; document.getElementById('gateDeniedWrap').style.display='none'; document.getElementById('gatePaySuccessWrap').style.display='block'; }
+
+  const _wp = new URLSearchParams(window.location.search);
+  if(_wp.has('id') && _wp.has('status')){
+    window.history.replaceState({}, '', window.location.pathname);
+    gate.style.display='flex'; appEl.style.display='none'; if(fab)fab.style.display='none';
+    document.getElementById('gateFormWrap').style.display='none';
+    document.getElementById('gateDeniedWrap').style.display='none';
+    document.getElementById('gatePaySuccessWrap').style.display='none';
+    (async function(){
+      try{
+        if(_wp.get('status')==='APPROVED'){
+          var props=(_wp.get('signature[properties]')||'id,status,amount_in_cents,currency').split(',');
+          var raw=props.map(function(p){return _wp.get(p)||'';}).join('')+WOMPI_INTEGRITY;
+          var hex=await wompiSHA256(raw);
+          if(hex===_wp.get('signature[checksum]')){
+            var pendingEmail=sessionStorage.getItem(WOMPI_EMAIL_KEY);
+            if(pendingEmail){
+              sessionStorage.removeItem(WOMPI_EMAIL_KEY);
+              await fetch(SB_URL+'/rest/v1/accesos?on_conflict=email',{method:'POST',headers:Object.assign(sbH(),{'Prefer':'resolution=merge-duplicates'}),body:JSON.stringify({email:pendingEmail,activo:true,nombre:''})});
+              unlockPage(); return;
+            } else { showGatePaySuccess(); return; }
+          }
+        }
+      }catch(e){}
+      showGateForm();
+      var errEl=document.getElementById('gateError');
+      errEl.textContent='El pago no fue aprobado. Intenta de nuevo.';
+      errEl.classList.add('show');
+    })();
+  } else {
+    showGateForm();
+  }
 
   /* ── Verificar correo al ingresar ────────────────────────── */
   const submitBtn = document.getElementById('gateSubmitBtn');
@@ -5304,8 +5360,8 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
       if(Array.isArray(d)&&d.length>0){
         unlockPage();
       } else {
-        errorEl.innerHTML='Este correo no tiene acceso autorizado.<br><small>Verifica que sea el mismo correo que le diste a Jennifer al comprar.</small>';
-        errorEl.classList.add('show'); emailInp.select();
+        sessionStorage.setItem(WOMPI_EMAIL_KEY, email);
+        showGateDenied(email);
       }
     } catch(e){
       errorEl.textContent='Error de conexión. Revisa tu internet e intenta de nuevo.';
@@ -5316,6 +5372,38 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
   }
   submitBtn.addEventListener('click', doVerify);
   emailInp.addEventListener('keydown', function(e){ if(e.key==='Enter') doVerify(); });
+
+  /* ── Wompi: botón comprar ────────────────────────────────── */
+  var wompiPayBtn = document.getElementById('wompiPayBtn');
+  if(wompiPayBtn) wompiPayBtn.addEventListener('click', function(){
+    window.location.href = WOMPI_LINK;
+  });
+  var backToEmailBtn = document.getElementById('backToEmailBtn');
+  if(backToEmailBtn) backToEmailBtn.addEventListener('click', function(e){ e.preventDefault(); showGateForm(); });
+
+  /* ── Wompi: confirmar correo post-pago ───────────────────── */
+  var gatePayEmail      = document.getElementById('gatePayEmail');
+  var gatePayConfirmBtn = document.getElementById('gatePayConfirmBtn');
+  var gatePayError      = document.getElementById('gatePayError');
+  if(gatePayConfirmBtn){
+    gatePayConfirmBtn.addEventListener('click', async function(){
+      var em = gatePayEmail.value.trim().toLowerCase();
+      gatePayError.classList.remove('show');
+      if(!em||!em.includes('@')||!em.includes('.')){
+        gatePayError.textContent='Ingresa un correo válido.'; gatePayError.classList.add('show'); return;
+      }
+      gatePayConfirmBtn.disabled=true;
+      gatePayConfirmBtn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>&nbsp;Activando…';
+      try{
+        await fetch(SB_URL+'/rest/v1/accesos?on_conflict=email',{method:'POST',headers:Object.assign(sbH(),{'Prefer':'resolution=merge-duplicates'}),body:JSON.stringify({email:em,activo:true,nombre:''})});
+        unlockPage();
+      }catch(e){
+        gatePayError.textContent='Error de conexión. Intenta de nuevo.'; gatePayError.classList.add('show');
+        gatePayConfirmBtn.disabled=false; gatePayConfirmBtn.textContent='Activar mi acceso';
+      }
+    });
+    if(gatePayEmail) gatePayEmail.addEventListener('keydown', function(e){ if(e.key==='Enter') gatePayConfirmBtn.click(); });
+  }
 
   /* ══════════════════════════════════════════════════════════
      PANEL DE ADMINISTRACIÓN
