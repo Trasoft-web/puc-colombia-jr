@@ -5317,18 +5317,21 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
     document.getElementById('gateDeniedWrap').style.display='none';
     document.getElementById('gatePaySuccessWrap').style.display='none';
     (async function(){
-      try{
-        if(_wp.get('status')==='APPROVED'){
-          var pendingEmail=sessionStorage.getItem(WOMPI_EMAIL_KEY)||'';
-          if(pendingEmail){
-            sessionStorage.removeItem(WOMPI_EMAIL_KEY);
-            await fetch(SB_URL+'/rest/v1/accesos?on_conflict=email',{method:'POST',headers:Object.assign(sbH(),{'Prefer':'resolution=merge-duplicates'}),body:JSON.stringify({email:pendingEmail,activo:true,nombre:''})});
-            unlockPage(); return;
-          }
-          // Sin correo en sesión (raro) → pedir confirmación manual
-          showGatePaySuccess(); return;
+      if(_wp.get('status')==='APPROVED'){
+        var pendingEmail=sessionStorage.getItem(WOMPI_EMAIL_KEY)||'';
+        if(pendingEmail){
+          var guardado=false;
+          try{
+            var r=await fetch(SB_URL+'/rest/v1/accesos?on_conflict=email',{method:'POST',headers:Object.assign(sbH(),{'Prefer':'resolution=merge-duplicates'}),body:JSON.stringify({email:pendingEmail,activo:true,nombre:''})});
+            guardado=r.ok||r.status===201||r.status===200;
+          }catch(_){}
+          if(guardado){ sessionStorage.removeItem(WOMPI_EMAIL_KEY); unlockPage(); return; }
         }
-      }catch(e){}
+        // Guardar falló o sin email en sesión → pantalla de confirmación
+        var payEl=document.getElementById('gatePayEmail');
+        if(payEl&&pendingEmail) payEl.value=pendingEmail;
+        showGatePaySuccess(); return;
+      }
       showGateForm();
       var errEl=document.getElementById('gateError');
       errEl.textContent='El pago no fue aprobado. Intenta de nuevo.';
