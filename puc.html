@@ -5267,7 +5267,8 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
   ──────────────────────────────────────────────────────────── */
   const WOMPI_LINK      = 'https://checkout.wompi.co/l/test_EDnqYN';
   const WOMPI_INTEGRITY = 'test_integrity_q8NN0cYcEahYOajQDh7DgrtwAgepf85h';
-  const WOMPI_EMAIL_KEY = 'puc_wompi_email';
+  const WOMPI_EMAIL_KEY     = 'puc_wompi_email';
+  const WOMPI_PENDING_KEY   = 'puc_wompi_pending';
 
   /* ── Helpers REST ────────────────────────────────────────── */
   function sbH(extra){
@@ -5338,7 +5339,17 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
       errEl.classList.add('show');
     })();
   } else {
-    showGateForm();
+    // Verificar si el usuario venía de un pago reciente sin parámetros en la URL
+    var _pp=null;
+    try{ var _s=localStorage.getItem(WOMPI_PENDING_KEY); if(_s){ _pp=JSON.parse(_s); if(Date.now()-_pp.t>1800000){localStorage.removeItem(WOMPI_PENDING_KEY);_pp=null;} } }catch(_){}
+    if(_pp&&_pp.e){
+      localStorage.removeItem(WOMPI_PENDING_KEY);
+      var _payEl=document.getElementById('gatePayEmail');
+      if(_payEl) _payEl.value=_pp.e;
+      showGatePaySuccess();
+    } else {
+      showGateForm();
+    }
   }
 
   /* ── Verificar correo al ingresar ────────────────────────── */
@@ -5376,6 +5387,8 @@ document.getElementById('dynFields').addEventListener('keydown', e=>{
   /* ── Wompi: botón comprar ────────────────────────────────── */
   var wompiPayBtn = document.getElementById('wompiPayBtn');
   if(wompiPayBtn) wompiPayBtn.addEventListener('click', function(){
+    var _em=sessionStorage.getItem(WOMPI_EMAIL_KEY)||'';
+    if(_em) try{localStorage.setItem(WOMPI_PENDING_KEY,JSON.stringify({e:_em,t:Date.now()}));}catch(_){}
     window.location.href = WOMPI_LINK;
   });
   var backToEmailBtn = document.getElementById('backToEmailBtn');
